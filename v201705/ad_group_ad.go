@@ -29,9 +29,6 @@ type TextAd struct {
 	Description1         string            `xml:"description1"`
 	Description2         string            `xml:"description2"`
 	Status               string            `xml:"-"`
-	ApprovalStatus       string            `xml:"-"`
-	DisapprovalReasons   []string          `xml:"-"`
-	TrademarkDisapproved bool              `xml:"-"`
 	Labels               []Label           `xml:"-"`
 }
 
@@ -50,10 +47,6 @@ type ExpandedTextAd struct {
 	Path2                string                 `xml:"path2"`
 	ExperimentData       *AdGroupExperimentData `xml:"-"`
 	Status               string                 `xml:"-"`
-	ApprovalStatus       string                 `xml:"-"`
-	Trademarks           []string               `xml:"-"`
-	DisapprovalReasons   []string               `xml:"-"`
-	TrademarkDisapproved bool                   `xml:"-"`
 	Labels               []Label                `xml:"-"`
 	BaseCampaignId       *int64                 `xml:"-"`
 	BaseAdGroupId        *int64                 `xml:"-"`
@@ -75,10 +68,6 @@ type ResponsiveDisplayAd struct {
 	BusinessName         string                `xml:"businessName"`
 	ExperimentData       AdGroupExperimentData `xml:"-"`
 	Status               string                `xml:"-"`
-	ApprovalStatus       string                `xml:"-"`
-	Trademarks           []string              `xml:"-"`
-	DisapprovalReasons   []string              `xml:"-"`
-	TrademarkDisapproved bool                  `xml:"-"`
 	Labels               []Label               `xml:"-"`
 	BaseCampaignId       int64                 `xml:"-"`
 	BaseAdGroupId        int64                 `xml:"-"`
@@ -106,9 +95,6 @@ type ImageAd struct {
 	Name                 string            `xml:"name"`
 	AdToCopyImageFrom    int64             `xml:"adToCopyImageFrom"`
 	Status               string            `xml:"-"`
-	ApprovalStatus       string            `xml:"-"`
-	DisapprovalReasons   []string          `xml:"-"`
-	TrademarkDisapproved bool              `xml:"-"`
 	Labels               []Label           `xml:"-"`
 }
 
@@ -132,9 +118,6 @@ type MobileAd struct {
 	CountryCode          string            `xml:"countryCode"`
 	PhoneNumber          string            `xml:"phoneNumber"`
 	Status               string            `xml:"-"`
-	ApprovalStatus       string            `xml:"-"`
-	DisapprovalReasons   []string          `xml:"-"`
-	TrademarkDisapproved bool              `xml:"-"`
 	Labels               []Label           `xml:"-"`
 }
 
@@ -170,9 +153,6 @@ type TemplateAd struct {
 	Duration             int64             `xml:"duration"`
 	originAdId           *int64            `xml:"originAdId"`
 	Status               string            `xml:"-"`
-	ApprovalStatus       string            `xml:"-"`
-	DisapprovalReasons   []string          `xml:"-"`
-	TrademarkDisapproved bool              `xml:"-"`
 	Labels               []Label           `xml:"-"`
 }
 
@@ -189,9 +169,6 @@ type DynamicSearchAd struct {
 	Type                 string            `xml:"type,omitempty"`
 	DevicePreference     int64             `xml:"devicePreference,omitempty"`
 	Status               string            `xml:"-"`
-	ApprovalStatus       string            `xml:"-"`
-	DisapprovalReasons   []string          `xml:"-"`
-	TrademarkDisapproved bool              `xml:"-"`
 }
 
 type ProductAd struct {
@@ -199,9 +176,6 @@ type ProductAd struct {
 	Id                   int64    `xml:"id,omitempty"`
 	Type                 string   `xml:"type,omitempty"`
 	Status               string   `xml:"-"`
-	ApprovalStatus       string   `xml:"-"`
-	DisapprovalReasons   []string `xml:"-"`
-	TrademarkDisapproved bool     `xml:"-"`
 }
 
 type AdGroupAdOperations map[string]AdGroupAds
