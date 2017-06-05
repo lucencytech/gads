@@ -19,6 +19,11 @@ type SharedCriterion struct {
 	Criterion Criterion `xml:"criterion,omitempty"`
 }
 
+type SharedCriterionOperation struct {
+	Operator string          `xml:"operator,omitempty"`
+	Operand  SharedCriterion `xml:"operand,omitempty"`
+}
+
 func (s SharedCriterionService) Get(selector Selector) (sharedCriteria []SharedCriterion, totalCount int64, err error) {
 	selector.XMLName = xml.Name{baseUrl, "selector"}
 	respBody, err := s.Auth.request(
@@ -49,6 +54,20 @@ func (s SharedCriterionService) Get(selector Selector) (sharedCriteria []SharedC
 	return getResp.SharedCriteria, getResp.Size, err
 }
 
+func (s SharedCriterionService) Mutate(operations []SharedCriterionOperation) error {
+	mutateRequest := struct {
+		XMLName xml.Name
+		Ops     []SharedCriterionOperation `xml:"operations"`
+	}{
+		XMLName: xml.Name{
+			Space: baseUrl,
+			Local: "mutate",
+		},
+		Ops: operations}
+	_, err := s.Auth.request(sharedCriterionServiceUrl, "mutate", mutateRequest)
+	return err
+}
+
 func (s *SharedCriterion) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) error {
 	for token, err := dec.Token(); err == nil; token, err = dec.Token() {
 		if err != nil {
@@ -77,5 +96,21 @@ func (s *SharedCriterion) UnmarshalXML(dec *xml.Decoder, start xml.StartElement)
 			}
 		}
 	}
+	return nil
+}
+
+func (s SharedCriterion) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	start.Attr = append(
+		start.Attr,
+		xml.Attr{
+			xml.Name{"http://www.w3.org/2001/XMLSchema-instance", "type"},
+			"SharedCriterion",
+		},
+	)
+	e.EncodeToken(start)
+	e.EncodeElement(&s.Id, xml.StartElement{Name: xml.Name{baseUrl, "sharedSetId"}})
+	criterionMarshalXML(s.Criterion, e)
+	e.EncodeElement(&s.Negative, xml.StartElement{Name: xml.Name{baseUrl, "negative"}})
+	e.EncodeToken(start.End())
 	return nil
 }
