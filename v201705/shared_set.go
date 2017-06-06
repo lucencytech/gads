@@ -19,6 +19,11 @@ type SharedSet struct {
 	Status         string `xml:"status,omitempty"`
 }
 
+type SharedSetOperation struct {
+	Operator string    `xml:"operator,omitempty"`
+	Operand  SharedSet `xml:"operand,omitempty"`
+}
+
 func (s SharedSetService) Get(selector Selector) (sharedSets []SharedSet, totalCount int64, err error) {
 	selector.XMLName = xml.Name{baseUrl, "selector"}
 	respBody, err := s.Auth.request(
@@ -47,4 +52,18 @@ func (s SharedSetService) Get(selector Selector) (sharedSets []SharedSet, totalC
 		return sharedSets, totalCount, err
 	}
 	return getResp.SharedSets, getResp.Size, err
+}
+
+func (s SharedSetService) Mutate(operations []SharedSetOperation) error {
+	mutateRequest := struct {
+		XMLName xml.Name
+		Ops     []SharedSetOperation `xml:"operations"`
+	}{
+		XMLName: xml.Name{
+			Space: baseUrl,
+			Local: "mutate",
+		},
+		Ops: operations}
+	_, err := s.Auth.request(sharedSetServiceUrl, "mutate", mutateRequest)
+	return err
 }

@@ -14,9 +14,9 @@ func NewSharedCriterionService(auth *Auth) *SharedCriterionService {
 }
 
 type SharedCriterion struct {
-	Id        int64     `xml:"sharedSetId,omitempty"`
-	Negative  bool      `xml:"negative,omitempty"`
-	Criterion Criterion `xml:"criterion,omitempty"`
+	SharedSetId int64     `xml:"sharedSetId,omitempty"`
+	Negative    bool      `xml:"negative,omitempty"`
+	Criterion   Criterion `xml:"criterion,omitempty"`
 }
 
 type SharedCriterionOperation struct {
@@ -78,7 +78,7 @@ func (s *SharedCriterion) UnmarshalXML(dec *xml.Decoder, start xml.StartElement)
 			tag := start.Name.Local
 			switch tag {
 			case "sharedSetId":
-				if err := dec.DecodeElement(&s.Id, &start); err != nil {
+				if err := dec.DecodeElement(&s.SharedSetId, &start); err != nil {
 					return err
 				}
 			case "negative":
@@ -108,7 +108,7 @@ func (s SharedCriterion) MarshalXML(e *xml.Encoder, start xml.StartElement) erro
 		},
 	)
 	e.EncodeToken(start)
-	e.EncodeElement(&s.Id, xml.StartElement{Name: xml.Name{baseUrl, "sharedSetId"}})
+	e.EncodeElement(&s.SharedSetId, xml.StartElement{Name: xml.Name{baseUrl, "sharedSetId"}})
 	criterionMarshalXML(s.Criterion, e)
 	e.EncodeElement(&s.Negative, xml.StartElement{Name: xml.Name{baseUrl, "negative"}})
 	e.EncodeToken(start.End())
