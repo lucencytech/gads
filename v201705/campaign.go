@@ -1,8 +1,6 @@
 package v201705
 
-import (
-	"encoding/xml"
-)
+import "encoding/xml"
 
 // A campaignService holds the connection information for the
 // campaign service.
@@ -124,11 +122,13 @@ type CustomParameters struct {
 type Campaign struct {
 	Id                             int64                           `xml:"id,omitempty"`
 	Name                           string                          `xml:"name"`
+	BudgetAmount                   int64                           `xml:"budget>amount>microAmount,omitempty"`
 	Status                         string                          `xml:"status"`                  // Status: "ENABLED", "PAUSED", "REMOVED"
 	ServingStatus                  *string                         `xml:"servingStatus,omitempty"` // ServingStatus: "SERVING", "NONE", "ENDED", "PENDING", "SUSPENDED"
 	StartDate                      string                          `xml:"startDate"`
 	EndDate                        *string                         `xml:"endDate,omitempty"`
 	BudgetId                       int64                           `xml:"budget>budgetId"`
+	BudgetDeliveryMethod           string                          `xml:"budget>deliveryMethod"`
 	ConversionOptimizerEligibility *conversionOptimizerEligibility `xml:"conversionOptimizerEligibility"`
 	AdServingOptimizationStatus    string                          `xml:"adServingOptimizationStatus"`
 	FrequencyCap                   *FrequencyCap                   `xml:"frequencyCap"`
