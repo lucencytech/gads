@@ -173,44 +173,25 @@ func (aga *AdGroupAds) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) er
 	switch a := ad.(type) {
 	case TextAd:
 		a.Status = status
-		a.ApprovalStatus = approvalStatus
-		a.DisapprovalReasons = disapprovalReasons
-		a.TrademarkDisapproved = trademarkDisapproved
 		*aga = append(*aga, a)
 	case ExpandedTextAd:
 		a.ExperimentData = experimentData
 		a.Status = status
-		a.ApprovalStatus = approvalStatus
-		a.Trademarks = trademarks
-		a.DisapprovalReasons = disapprovalReasons
-		a.TrademarkDisapproved = trademarkDisapproved
 		a.Labels = labels
 		a.BaseCampaignId = baseCampaignId
 		a.BaseAdGroupId = baseAdGroupId
 		*aga = append(*aga, a)
 	case ImageAd:
 		a.Status = status
-		a.ApprovalStatus = approvalStatus
-		a.DisapprovalReasons = disapprovalReasons
-		a.TrademarkDisapproved = trademarkDisapproved
 		*aga = append(*aga, a)
 	case TemplateAd:
 		a.Status = status
-		a.ApprovalStatus = approvalStatus
-		a.DisapprovalReasons = disapprovalReasons
-		a.TrademarkDisapproved = trademarkDisapproved
 		*aga = append(*aga, a)
 	case DynamicSearchAd:
 		a.Status = status
-		a.ApprovalStatus = approvalStatus
-		a.DisapprovalReasons = disapprovalReasons
-		a.TrademarkDisapproved = trademarkDisapproved
 		*aga = append(*aga, a)
 	case ProductAd:
 		a.Status = status
-		a.ApprovalStatus = approvalStatus
-		a.DisapprovalReasons = disapprovalReasons
-		a.TrademarkDisapproved = trademarkDisapproved
 		*aga = append(*aga, a)
 	}
 	return nil

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 )
 
@@ -91,8 +90,12 @@ type Auth struct {
 	DeveloperToken string
 	UserAgent      string
 	PartialFailure bool
-	Testing        *testing.T   `json:"-"`
-	Client         *http.Client `json:"-"`
+	Testing        *testing.T `json:"-"`
+	Client         HttpClient `json:"-"`
+}
+
+type HttpClient interface {
+	Do(*http.Request) (*http.Response, error)
 }
 
 //
@@ -219,14 +222,14 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	contentLength := fmt.Sprintf("%d", len(reqBody))
 	req.Header.Add("Content-length", contentLength)
 	req.Header.Add("SOAPAction", action)
-	if a.Testing != nil {
-		a.Testing.Logf("request ->\n%s\n%#v\n%s\n", req.URL.String(), req.Header, string(reqBody))
-	}
+	//if a.Testing != nil {
+	//	a.Testing.Logf("request ->\n%s\n%#v\n%s\n", req.URL.String(), req.Header, string(reqBody))
+	//}
 
 	// Added some logging/"poor man's" debugging to inspect outbound SOAP requests
-	if level := os.Getenv("DEBUG"); level != "" {
-		fmt.Printf("request ->\n%s\n%#v\n%s\n", req.URL.String(), req.Header, string(reqBody))
-	}
+	//if level := os.Getenv("DEBUG"); level != "" {
+	//	fmt.Printf("request ->\n%s\n%#v\n%s\n", req.URL.String(), req.Header, string(reqBody))
+	//}
 
 	resp, err := a.Client.Do(req)
 	if err != nil {
@@ -237,9 +240,9 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	respBody, err = ioutil.ReadAll(resp.Body)
 
 	// Added some logging/"poor man's" debugging to inspect outbound SOAP requests
-	if level := os.Getenv("DEBUG"); level != "" {
-		fmt.Printf("response ->\n%s\n", string(respBody))
-	}
+	//if level := os.Getenv("DEBUG"); level != "" {
+	//	fmt.Printf("response ->\n%s\n", string(respBody))
+	//}
 
 	if a.Testing != nil {
 		a.Testing.Logf("respBody ->\n%s\n%s\n", string(respBody), resp.Status)
