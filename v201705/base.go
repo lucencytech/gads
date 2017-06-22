@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 )
 
@@ -227,9 +228,9 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	//}
 
 	// Added some logging/"poor man's" debugging to inspect outbound SOAP requests
-	//if level := os.Getenv("DEBUG"); level != "" {
-	//	fmt.Printf("request ->\n%s\n%#v\n%s\n", req.URL.String(), req.Header, string(reqBody))
-	//}
+	if level := os.Getenv("DEBUG"); level != "" {
+		fmt.Printf("request ->\n%s\n%#v\n%s\n", req.URL.String(), req.Header, string(reqBody))
+	}
 
 	resp, err := a.Client.Do(req)
 	if err != nil {

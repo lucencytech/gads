@@ -1,6 +1,7 @@
 package v201705
 
 import "encoding/xml"
+import "fmt"
 
 type SharedSetService struct {
 	Auth
@@ -64,6 +65,7 @@ func (s SharedSetService) Mutate(operations []SharedSetOperation) error {
 			Local: "mutate",
 		},
 		Ops: operations}
-	_, err := s.Auth.request(sharedSetServiceUrl, "mutate", mutateRequest)
+	r, err := s.Auth.request(sharedSetServiceUrl, "mutate", mutateRequest)
+	fmt.Println(r)
 	return err
 }

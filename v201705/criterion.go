@@ -197,8 +197,18 @@ type Address struct {
 
 type ProductDimension struct {
 	Type          string `xml:"ProductDimension.Type"`
-	DimensionType string `xml:"type"`
+	DimensionType string `xml:"type,omitempty"`
 	Value         string `xml:"value"`
+}
+
+func (s ProductDimension) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	start.Attr = []xml.Attr{xml.Attr{Name: xml.Name{Local: "XMLSchema-instance:type"}, Value: s.Type}}
+	e.EncodeToken(start)
+
+	e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+
+	e.EncodeToken(xml.EndElement{start.Name})
+	return nil
 }
 
 type ProductPartition struct {
@@ -208,6 +218,32 @@ type ProductPartition struct {
 	ParentCriterionId int64            `xml:"parentCriterionId,omitempty"`
 	Dimension         ProductDimension `xml:"caseValue"`
 	Cpc               *Cpc             // This value is inherited from BiddableAdgroupCriterion
+}
+
+func (s ProductPartition) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	start.Attr = []xml.Attr{xml.Attr{Name: xml.Name{Local: "XMLSchema-instance:type"}, Value: "ProductPartition"}}
+	e.EncodeToken(start)
+	if s.Id != 0 {
+		e.EncodeElement(s.Id, xml.StartElement{Name: xml.Name{Local: "id"}})
+	}
+
+	if s.CriteriaType != "" {
+		e.EncodeElement(s.CriteriaType, xml.StartElement{Name: xml.Name{Local: "type"}})
+	}
+
+	if s.PartitionType != "" {
+		e.EncodeElement(s.PartitionType, xml.StartElement{Name: xml.Name{Local: "partitionType"}})
+	}
+	if s.ParentCriterionId != 0 {
+		e.EncodeElement(s.ParentCriterionId, xml.StartElement{Name: xml.Name{Local: "parentCriterionId"}})
+	}
+
+	if s.Dimension != (ProductDimension{}) {
+		e.EncodeElement(s.Dimension, xml.StartElement{Name: xml.Name{Local: "caseValue"}})
+	}
+
+	e.EncodeToken(xml.EndElement{start.Name})
+	return nil
 }
 
 type ProductScope struct {
@@ -405,6 +441,8 @@ func criterionMarshalXML(c Criterion, e *xml.Encoder) error {
 		criterionType = "Vertical"
 	case WebpageCriterion:
 		criterionType = "Webpage"
+	case ProductPartition:
+		criterionType = "ProductPartition"
 	default:
 		return fmt.Errorf("unknown criterion type %#v\n", t)
 	}
