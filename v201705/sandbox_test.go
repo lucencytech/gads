@@ -99,14 +99,15 @@ func TestSandboxCriteria(t *testing.T) {
 
 			if part.ParentCriterionId == 0 {
 				root = part
-			} else if part.Dimension.Value == "agi" {
-				//	part.Dimension.TypeAttr = "ProductBrand"
-				crit.Criterion = part
-				toremove = &crit
 			} else {
 				crit.Criterion = part
 				fmt.Printf("CRIT:  %#v\n%#v\n", crit, *crit.BiddingStrategyConfiguration)
-				rest = append(rest, crit)
+				if part.Dimension.Value == "agi" {
+					//	part.Dimension.TypeAttr = "ProductBrand"
+					toremove = &crit
+				} else {
+					rest = append(rest, crit)
+				}
 			}
 		}
 		return root, rest, toremove
@@ -143,6 +144,7 @@ func TestSandboxCriteria(t *testing.T) {
 	part.Dimension.Value = "agi"
 	part.Id = 0
 	toadd.Criterion = part
+	toadd.BiddingStrategyConfiguration.StrategyType = "NONE"
 	//toadd.BiddingStrategyConfiguration = nil
 
 	aops := AdGroupCriterionOperations{
