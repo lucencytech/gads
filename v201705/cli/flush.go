@@ -2,7 +2,7 @@ package main
 
 import (
 	"crypto/rand"
-	"github.com/colinmutter/gads/v201705"
+	"github.com/Getsidecar/gads/v201705"
 	"golang.org/x/oauth2"
 	"log"
 )

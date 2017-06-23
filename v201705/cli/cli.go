@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	gads "github.com/colinmutter/gads/v201705"
+	gads "github.com/Getsidecar/gads/v201705"
 	"golang.org/x/oauth2"
 	"log"
 )
