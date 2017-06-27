@@ -65,7 +65,6 @@ func (s SharedSetService) Mutate(operations []SharedSetOperation) error {
 			Local: "mutate",
 		},
 		Ops: operations}
-	r, err := s.Auth.request(sharedSetServiceUrl, "mutate", mutateRequest)
-	fmt.Println(r)
+	_, err := s.Auth.request(sharedSetServiceUrl, "mutate", mutateRequest)
 	return err
 }
