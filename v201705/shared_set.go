@@ -1,7 +1,6 @@
 package v201705
 
 import "encoding/xml"
-import "fmt"
 
 type SharedSetService struct {
 	Auth
