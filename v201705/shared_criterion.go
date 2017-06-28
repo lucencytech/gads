@@ -64,8 +64,7 @@ func (s SharedCriterionService) Mutate(operations []SharedCriterionOperation) er
 			Local: "mutate",
 		},
 		Ops: operations}
-	r, err := s.Auth.request(sharedCriterionServiceUrl, "mutate", mutateRequest)
-	fmt.Println(string(r))
+	_, err := s.Auth.request(sharedCriterionServiceUrl, "mutate", mutateRequest)
 	return err
 }
 
