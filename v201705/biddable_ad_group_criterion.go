@@ -24,7 +24,7 @@ type BiddableAdGroupCriterion struct {
 	QualityInfo *QualityInfo `xml:"qualityInfo,omitempty"`
 
 	BiddingStrategyConfiguration *BiddingStrategyConfiguration `xml:"biddingStrategyConfiguration,omitempty"`
-	BidModifier                  int64                         `xml:"bidModifier,omitempty"`
+	BidModifier                  float64                       `xml:"bidModifier,omitempty"`
 
 	FinalUrls           []string         `xml:"finalUrls,omitempty"`
 	FinalMobileUrls     []string         `xml:"finalMobileUrls,omitempty"`

@@ -195,6 +195,13 @@ type Address struct {
 	CountryCode    string `xml:"countryCode"`
 }
 
+type asdfProductDimension struct {
+	Type          string `xml:"ProductDimension.Type"`
+	DimensionType string `xml:"type,omitempty"`
+	Value         string `xml:"value"`
+	Condition     string `xml:"condition"`
+}
+
 type ProductDimension struct {
 	Type          string `xml:"ProductDimension.Type"`
 	DimensionType string `xml:"type,omitempty"`
@@ -205,9 +212,29 @@ func (s ProductDimension) MarshalXML(e *xml.Encoder, start xml.StartElement) err
 	start.Attr = []xml.Attr{xml.Attr{Name: xml.Name{Local: "XMLSchema-instance:type"}, Value: s.Type}}
 	e.EncodeToken(start)
 
-	e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+	if s.Type == "ProductCanonicalCondition" {
+		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "condition"}})
+	} else {
+		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+	}
 
 	e.EncodeToken(xml.EndElement{start.Name})
+	return nil
+}
+
+func (s *ProductDimension) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) error {
+	a := &asdfProductDimension{}
+	if err := dec.DecodeElement(a, &start); err != nil {
+		return err
+	}
+
+	s.Type = a.Type
+	if a.Type == "ProductCanonicalCondition" {
+		s.Value = a.Condition
+	} else {
+		s.Value = a.Value
+	}
+	s.DimensionType = a.DimensionType
 	return nil
 }
 
