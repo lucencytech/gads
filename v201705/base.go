@@ -241,9 +241,9 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	respBody, err = ioutil.ReadAll(resp.Body)
 
 	// Added some logging/"poor man's" debugging to inspect outbound SOAP requests
-	//if level := os.Getenv("DEBUG"); level != "" {
-	//	fmt.Printf("response ->\n%s\n", string(respBody))
-	//}
+	if level := os.Getenv("DEBUG"); level != "" {
+		fmt.Printf("response ->\n%s\n", string(respBody))
+	}
 
 	if a.Testing != nil {
 		a.Testing.Logf("respBody ->\n%s\n%s\n", string(respBody), resp.Status)
