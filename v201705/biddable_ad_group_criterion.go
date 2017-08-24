@@ -55,7 +55,9 @@ func (bagc BiddableAdGroupCriterion) MarshalXML(e *xml.Encoder, start xml.StartE
 	if bagc.BidModifier != 0 {
 		e.EncodeElement(&bagc.BidModifier, xml.StartElement{Name: xml.Name{baseUrl, "bidModifier"}})
 	}
-	e.EncodeElement(&bagc.UrlCustomParameters, xml.StartElement{Name: xml.Name{baseUrl, "urlCustomParameters"}})
+	if len(bagc.UrlCustomParameters.CustomParameters) > 0 {
+		e.EncodeElement(&bagc.UrlCustomParameters, xml.StartElement{Name: xml.Name{baseUrl, "urlCustomParameters"}})
+	}
 	e.EncodeToken(start.End())
 	return nil
 }
