@@ -29,6 +29,172 @@ func getTestConfig() AuthConfig {
 	return authconf
 }
 
+func TestSandboxCreateSharedSet(t *testing.T) {
+	config := getTestConfig()
+
+	sets, err := NewSharedSetService(&config.Auth).Mutate([]SharedSetOperation{
+		{Operator: "ADD", Operand: SharedSet{Name: "created-shared-set-1", Type: "NEGATIVE_KEYWORDS"}},
+		{Operator: "ADD", Operand: SharedSet{Name: "created-shared-set-2", Type: "NEGATIVE_KEYWORDS"}},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ops := make([]SharedSetOperation, len(sets))
+
+	for i := range sets {
+		ops[i].Operand = sets[i]
+		ops[i].Operator = "REMOVE"
+	}
+
+	_, err = NewSharedSetService(&config.Auth).Mutate(ops)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestBreakOut(t *testing.T) {
+	config := getTestConfig()
+
+	campaigns, _, err := NewCampaignService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name", "CampaignId"},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(campaigns)
+	campaign := campaigns[0].Id
+
+	adgroups, _, err := NewAdGroupService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name"},
+		Predicates: []Predicate{
+			Predicate{
+				Field:    "CampaignId",
+				Operator: "EQUALS",
+				Values:   []string{strconv.FormatInt(campaign, 10)},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	adgroup, err := func() (*AdGroup, error) {
+		for _, a := range adgroups {
+			if a.Name == "sidecar-test-adgroup" {
+				return &a, nil
+			}
+		}
+		return nil, fmt.Errorf("missing test adgroup\n")
+	}()
+	if err != nil {
+		t.Fatal(err)
+	}
+	/*
+		query := fmt.Sprintf("SELECT * WHERE AdGroupId = %d", adgroup.Id)
+
+		crits, _, err := NewAdGroupCriterionService(&config.Auth).Query(query)
+	*/
+	crits, _, err := NewAdGroupCriterionService(&config.Auth).Get(Selector{
+		Fields: []string{"AdGroupId", "BidModifier", "CriterionUse", "ParentCriterionId", "CriteriaType", "CaseValue", "Id", "BiddingStrategyType", "CpcBid", "BiddingStrategyId"},
+		Predicates: []Predicate{
+			Predicate{
+				Field:    "AdGroupId",
+				Operator: "EQUALS",
+				Values:   []string{strconv.FormatInt(adgroup.Id, 10)},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var root BiddableAdGroupCriterion
+
+	for i := 0; i < len(crits); i++ {
+		crit, _ := crits[i].(BiddableAdGroupCriterion)
+		part := crit.Criterion.(ProductPartition)
+		fmt.Printf("%#v\n", part)
+
+		if part.Dimension.Value == "aaa" || part.Dimension.Value == "bbb" {
+			root = crit
+		}
+	}
+
+	crit := root.Criterion.(ProductPartition)
+	crit.PartitionType = "SUBDIVISION"
+	root.Criterion = crit
+
+	bsc := &BiddingStrategyConfiguration{
+		StrategyType: "NONE",
+		Bids: []Bid{
+			Bid{Type: "CpcBid", Amount: 600000},
+		},
+	}
+
+	cpc := &Cpc{
+		Amount: &CpcAmount{
+			MicroAmount: 600000,
+		},
+	}
+
+	newroot := root
+	newcrit := crit
+	newcrit.Id = -100
+	newcrit.Dimension.Value = "aaa"
+	//newcrit.Cpc = cpc
+	newroot.Criterion = newcrit
+	newroot.BiddingStrategyConfiguration = nil
+	//newroot.BiddingStrategyConfiguration.StrategyType = "NONE"
+
+	//newroot.BiddingStrategyConfiguration = bsc
+
+	newpart := BiddableAdGroupCriterion{
+		AdGroupId: root.AdGroupId,
+		Criterion: ProductPartition{
+			CriteriaType:      "PRODUCT_PARTITION",
+			PartitionType:     "UNIT",
+			ParentCriterionId: newcrit.Id,
+			Dimension: ProductDimension{
+				Type:  "ProductCanonicalCondition",
+				Value: "NEW",
+			},
+			Cpc: cpc,
+		},
+		BiddingStrategyConfiguration: bsc,
+	}
+
+	opp := BiddableAdGroupCriterion{
+		AdGroupId: root.AdGroupId,
+		Criterion: ProductPartition{
+			CriteriaType:      "PRODUCT_PARTITION",
+			PartitionType:     "UNIT",
+			ParentCriterionId: newcrit.Id,
+			Dimension: ProductDimension{
+				Type:  "ProductCanonicalCondition",
+				Value: "",
+			},
+		},
+		BiddingStrategyConfiguration: bsc,
+	}
+
+	aops := []AdGroupCriterionOperation{
+		{"REMOVE", root},
+		{"ADD", newroot},
+		{"ADD", opp},
+		{"ADD", newpart},
+	}
+
+	res, err := NewAdGroupCriterionService(&config.Auth).MutateOperations(aops)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(res)
+}
+
 func TestSandboxCriteria(t *testing.T) {
 	config := getTestConfig()
 
@@ -128,11 +294,11 @@ func TestSandboxCriteria(t *testing.T) {
 	*/
 
 	if toremove != nil {
-		aops := AdGroupCriterionOperations{
-			"REMOVE": AdGroupCriterions{*toremove},
+		aops := []AdGroupCriterionOperation{
+			{"REMOVE", *toremove},
 		}
 
-		res, err := NewAdGroupCriterionService(&config.Auth).Mutate(aops)
+		res, err := NewAdGroupCriterionService(&config.Auth).MutateOperations(aops)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -147,13 +313,11 @@ func TestSandboxCriteria(t *testing.T) {
 	toadd.BiddingStrategyConfiguration.StrategyType = "NONE"
 	//toadd.BiddingStrategyConfiguration = nil
 
-	aops := AdGroupCriterionOperations{
-		"ADD": AdGroupCriterions{
-			toadd,
-		},
+	aops := []AdGroupCriterionOperation{
+		{"ADD", toadd},
 	}
 
-	res, err := NewAdGroupCriterionService(&config.Auth).Mutate(aops)
+	res, err := NewAdGroupCriterionService(&config.Auth).MutateOperations(aops)
 	if err != nil {
 		t.Fatal(err)
 	}
