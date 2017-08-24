@@ -195,11 +195,12 @@ type Address struct {
 	CountryCode    string `xml:"countryCode"`
 }
 
-type asdfProductDimension struct {
+type productDimension struct {
 	Type          string `xml:"ProductDimension.Type"`
-	DimensionType string `xml:"type,omitempty"`
+	DimensionType string `xml:"type"`
 	Value         string `xml:"value"`
 	Condition     string `xml:"condition"`
+	Channel       string `xml:"channel"`
 }
 
 type ProductDimension struct {
@@ -212,10 +213,16 @@ func (s ProductDimension) MarshalXML(e *xml.Encoder, start xml.StartElement) err
 	start.Attr = []xml.Attr{xml.Attr{Name: xml.Name{Local: "XMLSchema-instance:type"}, Value: s.Type}}
 	e.EncodeToken(start)
 
-	if s.Type == "ProductCanonicalCondition" {
+	switch s.Type {
+	case "ProductCanonicalCondition":
 		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "condition"}})
-	} else {
+	case "ProductBrand", "ProductOfferId":
 		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+	case "ProductChannel":
+		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "channel"}})
+	case "ProductCustomAttribute", "ProductBiddingCategory", "ProductType":
+		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+		e.EncodeElement(s.DimensionType, xml.StartElement{Name: xml.Name{Local: "type"}})
 	}
 
 	e.EncodeToken(xml.EndElement{start.Name})
@@ -223,18 +230,25 @@ func (s ProductDimension) MarshalXML(e *xml.Encoder, start xml.StartElement) err
 }
 
 func (s *ProductDimension) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) error {
-	a := &asdfProductDimension{}
+	a := &productDimension{}
 	if err := dec.DecodeElement(a, &start); err != nil {
 		return err
 	}
 
 	s.Type = a.Type
-	if a.Type == "ProductCanonicalCondition" {
+
+	switch a.Type {
+	case "ProductCanonicalCondition":
 		s.Value = a.Condition
-	} else {
+	case "ProductBrand", "ProductOfferId":
 		s.Value = a.Value
+	case "ProductChannel":
+		s.Value = a.Channel
+	case "ProductCustomAttribute", "ProductBiddingCategory", "ProductType":
+		s.Value = a.Value
+		s.DimensionType = a.DimensionType
 	}
-	s.DimensionType = a.DimensionType
+
 	return nil
 }
 
