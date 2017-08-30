@@ -216,12 +216,15 @@ func (s ProductDimension) MarshalXML(e *xml.Encoder, start xml.StartElement) err
 	switch s.Type {
 	case "ProductCanonicalCondition":
 		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "condition"}})
-	case "ProductBrand", "ProductOfferId":
-		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
 	case "ProductChannel":
 		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "channel"}})
-	case "ProductCustomAttribute", "ProductBiddingCategory", "ProductType":
+	default:
+		//case "ProductBrand", "ProductOfferId":
+		//case "ProductCustomAttribute", "ProductBiddingCategory", "ProductType":
 		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+	}
+
+	if s.DimensionType != "" {
 		e.EncodeElement(s.DimensionType, xml.StartElement{Name: xml.Name{Local: "type"}})
 	}
 
@@ -236,17 +239,15 @@ func (s *ProductDimension) UnmarshalXML(dec *xml.Decoder, start xml.StartElement
 	}
 
 	s.Type = a.Type
+	s.DimensionType = a.DimensionType
 
 	switch a.Type {
 	case "ProductCanonicalCondition":
 		s.Value = a.Condition
-	case "ProductBrand", "ProductOfferId":
-		s.Value = a.Value
 	case "ProductChannel":
 		s.Value = a.Channel
-	case "ProductCustomAttribute", "ProductBiddingCategory", "ProductType":
+	default:
 		s.Value = a.Value
-		s.DimensionType = a.DimensionType
 	}
 
 	return nil
