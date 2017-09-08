@@ -98,18 +98,16 @@ func (aes *ApiExceptionFault) UnmarshalXML(dec *xml.Decoder, start xml.StartElem
 			case "errors":
 				errorType, _ := findAttr(start.Attr, xml.Name{Space: "http://www.w3.org/2001/XMLSchema-instance", Local: "type"})
 				switch errorType {
-				case "CriterionError", "TargetError", "BudgetError",
-					"AdGroupServiceError", "NotEmptyError", "LabelError",
-					"UrlError", "AdError", "ns2:UserListError":
-					e := EntityError{}
-					dec.DecodeElement(&e, &start)
-					aes.Errors = append(aes.Errors, e)
 				case "RateExceededError":
 					e := RateExceededError{}
 					dec.DecodeElement(&e, &start)
 					aes.Errors = append(aes.Errors, e)
 				default:
-					return fmt.Errorf("Unknown error type -> %s", start)
+					e := EntityError{}
+					if err := dec.DecodeElement(&e, &start); err != nil {
+						return fmt.Errorf("Unknown error type -> %s", start)
+					}
+					aes.Errors = append(aes.Errors, e)
 				}
 			case "reason":
 				break
