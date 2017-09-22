@@ -6,6 +6,46 @@ import (
 	"strings"
 )
 
+/*
+CONCURRENT_MODIFICATION
+UNEXPECTED_INTERNAL_API_ERROR
+RATE_EXCEEDED
+OAUTH_TOKEN_EXPIRED
+OAUTH_TOKEN_INVALID
+*/
+
+type baseError struct {
+	code    string
+	origErr error
+}
+
+func (b baseError) Error() string {
+	return b.origErr.Error()
+}
+
+func (b baseError) String() string {
+	return b.Error()
+}
+
+func (b baseError) Code() string {
+	return b.code
+}
+
+func (b baseError) OrigErr() error {
+	return b.origErr
+}
+
+type Error interface {
+	// Satisfy the generic error interface.
+	error
+
+	// Returns the short phrase depicting the classification of the error.
+	Code() string
+
+	// Returns the original error if one was set.  Nil is returned if not set.
+	OrigErr() error
+}
+
 type OperationError struct {
 	Code      int64  `xml:"OperationError>Code"`
 	Details   string `xml:"OperationError>Details"`
@@ -77,9 +117,11 @@ type RateExceededError struct {
 }
 
 type ApiExceptionFault struct {
-	Message string        `xml:"message"`
-	Type    string        `xml:"ApplicationException.Type"`
-	Errors  []interface{} `xml:"errors"`
+	Message    string `xml:"message"`
+	Type       string `xml:"ApplicationException.Type"`
+	ErrorsType string
+	Reason     string
+	Errors     []interface{} `xml:"errors"`
 }
 
 func (aes *ApiExceptionFault) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) (err error) {
@@ -97,11 +139,23 @@ func (aes *ApiExceptionFault) UnmarshalXML(dec *xml.Decoder, start xml.StartElem
 				}
 			case "errors":
 				errorType, _ := findAttr(start.Attr, xml.Name{Space: "http://www.w3.org/2001/XMLSchema-instance", Local: "type"})
+				aes.ErrorsType = errorType
+
 				switch errorType {
 				case "RateExceededError":
 					e := RateExceededError{}
 					dec.DecodeElement(&e, &start)
 					aes.Errors = append(aes.Errors, e)
+					aes.Reason = e.Reason
+
+				case "AuthenticationError", "DatabaseError", "InternalApiError":
+					e := EntityError{}
+					if err := dec.DecodeElement(&e, &start); err != nil {
+						return fmt.Errorf("Unknown error type -> %s", start)
+					}
+					aes.Errors = append(aes.Errors, e)
+					aes.Reason = e.Reason
+
 				default:
 					e := EntityError{}
 					if err := dec.DecodeElement(&e, &start); err != nil {

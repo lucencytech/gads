@@ -239,7 +239,10 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 
 	resp, err := a.Client.Do(req)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, &baseError{
+			code:    "RequestError",
+			origErr: err,
+		}
 	}
 	defer resp.Body.Close()
 
@@ -282,6 +285,19 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 		if err != nil {
 			return respBody, err
 		}
+		fmt.Println(resp.StatusCode)
+		fmt.Printf("%#v\n", fault)
+
+		for i := range fault.Errors.ApiExceptionFaults {
+			switch fault.Errors.ApiExceptionFaults[i].ErrorsType {
+			case "AuthenticationError", "RateExceededError", "DatabaseError", "InternalApiError":
+				return soapResp.Body.Response, &baseError{
+					code:    fault.Errors.ApiExceptionFaults[i].Reason,
+					origErr: &fault.Errors,
+				}
+			}
+		}
+
 		return soapResp.Body.Response, &fault.Errors
 	}
 	return soapResp.Body.Response, err
