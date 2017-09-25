@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -506,4 +507,43 @@ func TestSandboxSharedEntity(t *testing.T) {
 	}
 
 	fmt.Println(ss)
+}
+
+func TestRateError(t *testing.T) {
+	if e := os.Getenv("RUN_EXTRA_TESTS"); e == "" {
+		t.Skip()
+	}
+
+	config := getTestConfig()
+	wg := sync.WaitGroup{}
+
+	for j := 0; j < 40; j++ {
+		wg.Add(1)
+		go func() {
+			for i := 0; i < 100; i++ {
+				_, _, err := NewCampaignService(&config.Auth).Get(Selector{
+					Fields: []string{"Id", "Name", "CampaignId"},
+				})
+
+				if err == nil {
+					continue
+				}
+
+				if err, ok := err.(Error); ok {
+					fmt.Printf("%#v\n", err.OrigErr())
+					if err.Code() != "RATE_EXCEEDED" {
+						t.Fatalf("got %s error code, expected RATE_EXCEEDED\n", err.Code())
+					}
+				} else {
+					t.Fatalf("expected error to fill Error interface\n")
+				}
+
+				t.Fatal()
+			}
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+
 }

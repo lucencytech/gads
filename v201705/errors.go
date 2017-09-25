@@ -6,14 +6,6 @@ import (
 	"strings"
 )
 
-/*
-CONCURRENT_MODIFICATION
-UNEXPECTED_INTERNAL_API_ERROR
-RATE_EXCEEDED
-OAUTH_TOKEN_EXPIRED
-OAUTH_TOKEN_INVALID
-*/
-
 type baseError struct {
 	code    string
 	origErr error
