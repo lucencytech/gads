@@ -324,6 +324,89 @@ func TestSandboxCriteria(t *testing.T) {
 	fmt.Println(res)
 }
 
+func TestSandboxValidateOnly(t *testing.T) {
+	config := getTestConfig()
+	campaigns, n, err := NewCampaignService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name"},
+	})
+
+	fmt.Println(campaigns, n, err)
+
+	campaign := campaigns[0].Id
+
+	res, n, err := NewAdGroupService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name"},
+		Predicates: []Predicate{
+			Predicate{
+				Field:    "CampaignId",
+				Operator: "EQUALS",
+				Values:   []string{strconv.FormatInt(campaign, 10)},
+			},
+		},
+	})
+
+	fmt.Println(res, n, err)
+
+	sharedsets, n, err := NewSharedSetService(&config.Auth).Get(Selector{
+		Fields: []string{"SharedSetId", "Name", "Type"},
+	})
+
+	if err != nil {
+		t.Error("sharedset: ", err)
+	}
+
+	sharedset := sharedsets[0].Id
+
+	originalcrits, _, err := NewSharedCriterionService(&config.Auth).Get(Selector{
+		Fields: []string{"SharedSetId", "Negative"},
+		Predicates: []Predicate{
+			Predicate{
+				Field:    "SharedSetId",
+				Operator: "EQUALS",
+				Values:   []string{strconv.FormatInt(sharedset, 10)},
+			},
+		},
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	config.Auth.ValidateOnly = true
+	err = NewSharedCriterionService(&config.Auth).Mutate([]SharedCriterionOperation{
+		{"ADD", SharedCriterion{
+			SharedSetId: sharedset,
+			Negative:    true,
+			Criterion: KeywordCriterion{
+				MatchType: "PHRASE",
+				Text:      "bbbb",
+			},
+		}},
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	config.Auth.ValidateOnly = false
+	currentcrits, _, err := NewSharedCriterionService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "SharedSetId", "Negative", "KeywordText"},
+		Predicates: []Predicate{
+			Predicate{
+				Field:    "SharedSetId",
+				Operator: "EQUALS",
+				Values:   []string{strconv.FormatInt(sharedset, 10)},
+			},
+		},
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(originalcrits) != len(currentcrits) {
+		t.Errorf("actual crits after validateonly mutate: %d, expected: %d\n", len(currentcrits), len(originalcrits))
+	}
+}
+
 func TestSandboxSharedEntity(t *testing.T) {
 	config := getTestConfig()
 

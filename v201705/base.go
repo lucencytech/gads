@@ -91,6 +91,7 @@ type Auth struct {
 	DeveloperToken string
 	UserAgent      string
 	PartialFailure bool
+	ValidateOnly   bool
 	Testing        *testing.T `json:"-"`
 	Client         HttpClient `json:"-"`
 }
@@ -181,6 +182,7 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 		DeveloperToken   string `xml:"developerToken"`
 		ClientCustomerId string `xml:"clientCustomerId,omitempty"`
 		PartialFailure   bool   `xml:"partialFailure,omitempty"`
+		ValidateOnly     bool   `xml:"validateOnly,omitempty"`
 	}
 
 	type soapReqBody struct {
@@ -203,6 +205,9 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	// https://developers.google.com/adwords/api/docs/guides/partial-failure
 	if a.PartialFailure {
 		reqHead.PartialFailure = true
+	}
+	if a.ValidateOnly {
+		reqHead.ValidateOnly = true
 	}
 
 	reqBody, err := xml.MarshalIndent(
