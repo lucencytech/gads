@@ -213,15 +213,17 @@ func (s ProductDimension) MarshalXML(e *xml.Encoder, start xml.StartElement) err
 	start.Attr = []xml.Attr{xml.Attr{Name: xml.Name{Local: "XMLSchema-instance:type"}, Value: s.Type}}
 	e.EncodeToken(start)
 
-	switch s.Type {
-	case "ProductCanonicalCondition":
-		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "condition"}})
-	case "ProductChannel":
-		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "channel"}})
-	default:
-		//case "ProductBrand", "ProductOfferId":
-		//case "ProductCustomAttribute", "ProductBiddingCategory", "ProductType":
-		e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+	if s.Value != "" {
+		switch s.Type {
+		case "ProductCanonicalCondition":
+			e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "condition"}})
+		case "ProductChannel":
+			e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "channel"}})
+		default:
+			//case "ProductBrand", "ProductOfferId":
+			//case "ProductCustomAttribute", "ProductBiddingCategory", "ProductType":
+			e.EncodeElement(s.Value, xml.StartElement{Name: xml.Name{Local: "value"}})
+		}
 	}
 
 	if s.DimensionType != "" {

@@ -55,6 +55,214 @@ func TestSandboxCreateSharedSet(t *testing.T) {
 	}
 }
 
+func TestOPPBreakout(t *testing.T) {
+	config := getTestConfig()
+
+	campaigns, _, err := NewCampaignService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name", "CampaignId"},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(campaigns)
+	campaignId := campaigns[0].Id
+
+	/*
+		adgroups, err := NewAdGroupService(&config.Auth).Mutate(AdGroupOperations{
+			"ADD": []AdGroup{
+				AdGroup{
+					Name:       "opp-breakout-test",
+					Status:     "PAUSED",
+					CampaignId: campaignId,
+				},
+			}})
+	*/
+
+	adgroups, _, err := NewAdGroupService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name"},
+		Predicates: []Predicate{
+			Predicate{
+				Field:    "CampaignId",
+				Operator: "EQUALS",
+				Values:   []string{strconv.FormatInt(campaignId, 10)},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	adgroup, err := func() (*AdGroup, error) {
+		for _, a := range adgroups {
+			if a.Name == "opp-breakout-test" {
+				return &a, nil
+			}
+		}
+		return nil, fmt.Errorf("missing test adgroup\n")
+	}()
+
+	crits, _, err := NewAdGroupCriterionService(&config.Auth).Get(Selector{
+		Fields: []string{"AdGroupId", "BidModifier", "CriterionUse", "ParentCriterionId", "CriteriaType", "CaseValue", "Id", "BiddingStrategyType", "CpcBid", "BiddingStrategyId"},
+		Predicates: []Predicate{
+			Predicate{
+				Field:    "AdGroupId",
+				Operator: "EQUALS",
+				Values:   []string{strconv.FormatInt(adgroup.Id, 10)},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, x := range crits {
+		fmt.Printf("%#v\n", x)
+	}
+
+	var target BiddableAdGroupCriterion
+	var rootId int64
+
+	for i := 0; i < len(crits); i++ {
+		crit, _ := crits[i].(BiddableAdGroupCriterion)
+		part := crit.Criterion.(ProductPartition)
+		fmt.Printf("%#v\n", part)
+
+		if part.ParentCriterionId == 0 {
+			rootId = part.Id
+		}
+
+		if part.Dimension.Value == "" && part.Dimension.Type == "ProductBrand" {
+			target = crit
+		}
+	}
+
+	fmt.Println("target ---------------------->")
+	fmt.Println(target)
+	bsc := &BiddingStrategyConfiguration{
+		StrategyType: "NONE",
+		Bids: []Bid{
+			Bid{Type: "CpcBid", Amount: 60000},
+		},
+	}
+
+	newopp := BiddableAdGroupCriterion{
+		AdGroupId: adgroup.Id,
+		Criterion: ProductPartition{
+			Id:                -501,
+			CriteriaType:      "",
+			PartitionType:     "SUBDIVISION",
+			ParentCriterionId: rootId,
+			Dimension: ProductDimension{
+				Type:  "ProductBrand",
+				Value: "",
+			},
+		},
+	}
+
+	child := BiddableAdGroupCriterion{
+		AdGroupId: adgroup.Id,
+		Criterion: ProductPartition{
+			CriteriaType:      "PRODUCT_PARTITION",
+			PartitionType:     "UNIT",
+			ParentCriterionId: -501,
+			Dimension: ProductDimension{
+				Type:  "ProductOfferId",
+				Value: "ASDF0001",
+			},
+		},
+		BiddingStrategyConfiguration: bsc,
+	}
+
+	oppopp := BiddableAdGroupCriterion{
+		AdGroupId: adgroup.Id,
+		Criterion: ProductPartition{
+			CriteriaType:      "PRODUCT_PARTITION",
+			PartitionType:     "UNIT",
+			ParentCriterionId: -501,
+			Dimension: ProductDimension{
+				Type:  "ProductOfferId",
+				Value: "",
+			},
+		},
+		BiddingStrategyConfiguration: bsc,
+	}
+
+	aops := []AdGroupCriterionOperation{
+		{"REMOVE", target},
+		{"ADD", newopp},
+		{"ADD", oppopp},
+		{"ADD", child},
+	}
+
+	config.Auth.ValidateOnly = true
+	/*
+		root := BiddableAdGroupCriterion{
+			AdGroupId: adgroup.Id,
+			Criterion: ProductPartition{
+				Id:                -555,
+				CriteriaType:      "",
+				PartitionType:     "SUBDIVISION",
+				ParentCriterionId: 0,
+			},
+		}
+
+		part1 := BiddableAdGroupCriterion{
+			AdGroupId: adgroup.Id,
+			Criterion: ProductPartition{
+				CriteriaType:      "PRODUCT_PARTITION",
+				PartitionType:     "UNIT",
+				ParentCriterionId: -555,
+				Dimension: ProductDimension{
+					Type:  "ProductBrand",
+					Value: "int",
+				},
+			},
+			BiddingStrategyConfiguration: bsc,
+		}
+
+		part := BiddableAdGroupCriterion{
+			AdGroupId: adgroup.Id,
+			Criterion: ProductPartition{
+				CriteriaType:      "PRODUCT_PARTITION",
+				PartitionType:     "UNIT",
+				ParentCriterionId: -555,
+				Dimension: ProductDimension{
+					Type:  "ProductBrand",
+					Value: "agi",
+				},
+			},
+			BiddingStrategyConfiguration: bsc,
+		}
+
+		opp := BiddableAdGroupCriterion{
+			AdGroupId: adgroup.Id,
+			Criterion: ProductPartition{
+				CriteriaType:      "PRODUCT_PARTITION",
+				PartitionType:     "UNIT",
+				ParentCriterionId: -555,
+				Dimension: ProductDimension{
+					Type:  "ProductBrand",
+					Value: "",
+				},
+			},
+			BiddingStrategyConfiguration: bsc,
+		}
+
+		aops := []AdGroupCriterionOperation{
+			{"ADD", root},
+			{"ADD", opp},
+			{"ADD", part1},
+			{"ADD", part},
+		}
+	*/
+
+	res, err := NewAdGroupCriterionService(&config.Auth).MutateOperations(aops)
+
+	fmt.Println(err, res)
+
+}
+
 func TestBreakOut(t *testing.T) {
 	config := getTestConfig()
 
