@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"reflect"
+	//"reflect"
 
 	"io/ioutil"
 	"net/http"
@@ -34,8 +34,18 @@ func getReport(auth *gads.Auth, headers []string) (collection []map[string]strin
 	}
 
 	collection, _ = rds.Get(rd)
-	fmt.Println("res type:", reflect.TypeOf(collection))
 	return collection
+}
+
+func getAWQLResult(auth *gads.Auth, query string) ([]map[string]string) {
+	rds := gads.NewReportDownloadService(auth)
+	report, err := rds.AWQL(query, "CSV")
+	if err != nil {
+		fmt.Println("Error in AWQL Query: ", err)
+		return nil
+	}
+
+	return report
 }
 
 func main() {
@@ -74,35 +84,6 @@ func main() {
 		}
 		fmt.Printf("Running %s...\n", client.Shortname)
 		authConfig.Auth.CustomerId = client.Accounts.Adwords.AccountId
-		// cs := gads.NewCampaignService(&authConfig.Auth)
-
-		// paging := gads.Paging{
-		// 	Offset: int64(0),
-		// 	Limit:  int64(1000),
-		// }
-
-		// sets, _, err := cs.Get(
-		// 	gads.Selector{
-		// 		Fields: []string{
-		// 			"Id",
-		// 			"Name",
-		// 			"BudgetId",
-		// 			"Amount",
-		// 		},
-		// 		Predicates: []gads.Predicate{
-		// 			{"Status", "EQUALS", []string{"ENABLED"}},
-		// 			{"AdvertisingChannelType", "EQUALS", []string{"SHOPPING"}},
-		// 		},
-		// 		Paging: &paging,
-		// 	},
-		// )
-
-		// if err != nil && !strings.Contains(err.Error(), "Authentication") && !strings.Contains(err.Error(), "Authorization") {
-		// 	fmt.Println(err)
-		// 	continue
-		// }
-
-		//fmt.Printf("sets: %+v \n", sets)
 
 		headers := []string{
 			"AccountDescriptiveName",
@@ -120,8 +101,30 @@ func main() {
 			"Device",
 		}
 
+
+		//
+		//query := `SELECT AccountDescriptiveName,
+		//				 CampaignId,
+		//				 AdGroupId,
+		//				 Cost,
+		//			 	 Clicks,
+		//				 Impressions,
+		//				 Conversions,
+		//				 ConversionValue,
+		//				 OfferId,
+		//				 ExternalCustomerId,
+		//				 Date,
+		//				 AdGroupName,
+		//				 Device
+		//		FROM SHOPPING_PERFORMANCE_REPORT
+		//		DURING YESTERDAY`
+
+
+		// For using AWQL
+		//report := getAWQLResult(&authConfig.Auth, query)
+
+		// For using Report Download Service
 		report := getReport(&authConfig.Auth, headers)
-		// fmt.Println("report:", report
 
 		file, _ := os.Create("result.csv")
 		writer := csv.NewWriter(file)
@@ -137,7 +140,7 @@ func main() {
 		}
 
 
-		for _, line := range report[0:10] {
+		for _, line := range report[0:100] {
 			var lineList []string
 			for _, header := range returnHeaders {
 				lineList = append(lineList, line[header])
@@ -145,56 +148,6 @@ func main() {
 
 			writer.Write(lineList)
 		}
-
-
-		//w.WriteStructHeader
-
-		// myFile, _ := os.Create("myTest.csv")
-		// myWriter := csv.NewWriter(os.Stdout)
-		// myWriter.Comma = '\t'
-		// myWriter.WriteStructAll(report)
-
-		// for _, set := range sets {
-		// 	//w.WriteStructAll(set)
-		// 	w.Write([]string{client.SiteID, client.Shortname, fmt.Sprintf("%d", set.Id), set.Name, fmt.Sprintf("%d", set.BudgetId), fmt.Sprintf("%d", set.BudgetAmount)})
-		// }
 	}
 	w.Flush()
-	//fmt.Printf("%#v\n", campaignMap)
-	//
-	//for _, campaigns := range campaignMap {
-	//	for _, campaign := range campaigns {
-	//		fmt.Printf("%s: %d\n", campaign.Name, campaign.Budget.Amount/1000000)
-	//	}
-	//}
-
-	//sharedSetService := gads.NewSharedSetService(&config.Auth)
-	//op := gads.SharedSetOperation{
-	//	Operator: "ADD",
-	//	Operand: gads.SharedSet{
-	//		Name: "Zach's dumb test list",
-	//		Type: "NEGATIVE_KEYWORDS",
-	//	},
-	//}
-	//err = sharedSetService.Mutate([]gads.SharedSetOperation{op})
-	//fmt.Println(err)
-
-	//sharedCriterionService := gads.NewSharedCriterionService(&config.Auth)
-	//
-	//sets, _, err := sharedCriterionService.Get(selector)
-	//
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//ops := []gads.SharedCriterionOperation{}
-	//for _, criterion := range sets {
-	//	criterion.SharedSetId = 1534457185
-	//	op := gads.SharedCriterionOperation{
-	//		Operator: "ADD",
-	//		Operand:  criterion,
-	//	}
-	//	ops = append(ops, op)
-	//}
-	//err = sharedCriterionService.Mutate(ops)
 }
