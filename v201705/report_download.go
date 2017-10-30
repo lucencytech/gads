@@ -24,7 +24,7 @@ func NewReportDownloadService(auth *Auth) *ReportDownloadService {
 	return &ReportDownloadService{Auth: *auth}
 }
 
-func (s *ReportDownloadService) Get(reportDefinition ReportDefinition) (res interface{}, err error) {
+func (s *ReportDownloadService) Get(reportDefinition ReportDefinition) (res []map[string]string, err error) {
 	reportDefinition.Selector.XMLName = xml.Name{baseUrl, "selector"}
 	repDef := reportDefinitionXml{
 		ReportDefinition: &reportDefinition,

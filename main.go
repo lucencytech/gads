@@ -2,16 +2,41 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 
 	"io/ioutil"
 	"net/http"
 
+	"encoding/csv"
 	gads "github.com/Getsidecar/gads/v201705"
 	"github.com/Getsidecar/sidecar-go-utils/config"
-	"strings"
 	"os"
-	"encoding/csv"
+	// "strings"
 )
+
+func getReport(auth *gads.Auth, headers []string) (collection []map[string]string) {
+	fmt.Println("getting report with auth:", auth)
+	rds := gads.NewReportDownloadService(auth)
+
+	rd := gads.ReportDefinition{
+		ReportName: "ReportNameGoesHere",
+		ReportType: "SHOPPING_PERFORMANCE_REPORT",
+		DateRangeType: "YESTERDAY",
+		DownloadFormat: "CSV",
+		Selector: gads.Selector{
+			Fields: headers,
+			// Predicates: []gads.Predicate{
+			// 	{"Status", "EQUALS", []string{"ENABLED"}},
+			// 	{"AdvertisingChannelType", "EQUALS", []string{"SHOPPING"}},
+			// },
+			// Paging: &paging,
+		},
+	}
+
+	collection, _ = rds.Get(rd)
+	fmt.Println("res type:", reflect.TypeOf(collection))
+	return collection
+}
 
 func main() {
 	authConfig, err := gads.NewCredentialsFromFile("config.json")
@@ -49,48 +74,81 @@ func main() {
 		}
 		fmt.Printf("Running %s...\n", client.Shortname)
 		authConfig.Auth.CustomerId = client.Accounts.Adwords.AccountId
-		cs := gads.NewCampaignService(&authConfig.Auth)
+		// cs := gads.NewCampaignService(&authConfig.Auth)
 
-		paging := gads.Paging{
-			Offset: int64(0),
-			Limit:  int64(1000),
+		// paging := gads.Paging{
+		// 	Offset: int64(0),
+		// 	Limit:  int64(1000),
+		// }
+
+		// sets, _, err := cs.Get(
+		// 	gads.Selector{
+		// 		Fields: []string{
+		// 			"Id",
+		// 			"Name",
+		// 			"BudgetId",
+		// 			"Amount",
+		// 		},
+		// 		Predicates: []gads.Predicate{
+		// 			{"Status", "EQUALS", []string{"ENABLED"}},
+		// 			{"AdvertisingChannelType", "EQUALS", []string{"SHOPPING"}},
+		// 		},
+		// 		Paging: &paging,
+		// 	},
+		// )
+
+		// if err != nil && !strings.Contains(err.Error(), "Authentication") && !strings.Contains(err.Error(), "Authorization") {
+		// 	fmt.Println(err)
+		// 	continue
+		// }
+
+		//fmt.Printf("sets: %+v \n", sets)
+
+		headers := []string{
+			"AccountDescriptiveName",
+			"CampaignId",
+			"AdGroupId",
+			"Cost",
+			"Clicks",
+			"Impressions",
+			"Conversions",
+			"ConversionValue",
+			"OfferId",
+			"ExternalCustomerId",
+			"Date",
+			"AdGroupName",
+			"Device",
 		}
 
-		sets, _, err := cs.Get(
-			gads.Selector{
-				Fields: []string{
-					"Id",
-					"Name",
-					"BudgetId",
-					"Amount",
-				},
-				Predicates: []gads.Predicate{
-				{"Status", "EQUALS", []string{"ENABLED"}},
-				{"AdvertisingChannelType", "EQUALS", []string{"SHOPPING"}},
-				},
-				Paging: &paging,
-			},
-		)
+		report := getReport(&authConfig.Auth, headers)
+		// fmt.Println("report:", report)
 
-		if err != nil && !strings.Contains(err.Error(), "Authentication") && !strings.Contains(err.Error(), "Authorization"){
-			fmt.Println(err)
-			continue
+		for _, line := range report[0:10] {
+			var lineList []string
+			for _, header := range headers {
+				lineList = append(lineList, line[header])
+			}
+
+			// for _, value := range line {
+			// 	lineList = append(lineList, value)
+			// }
+			// fmt.Println(lineList)
+			// fmt.Println("line type:", reflect.TypeOf(line))
+			fmt.Println(lineList)
 		}
 
-		fmt.Printf("sets: %+v \n", sets)
 
 		//w.WriteStructHeader
 
-		myFile, _ := os.Create("myTest.csv")
-		myWriter := csv.NewWriter(os.Stdout)
-		myWriter.Comma = '\t'
-		myWriter.WriteStructAll(sets)
+		// myFile, _ := os.Create("myTest.csv")
+		// myWriter := csv.NewWriter(os.Stdout)
+		// myWriter.Comma = '\t'
+		// myWriter.WriteStructAll(report)
 
-
-		for _, set := range sets {
-			//w.WriteStructAll(set)
-			w.Write([]string{client.SiteID, client.Shortname, fmt.Sprintf("%d", set.Id), set.Name, fmt.Sprintf("%d", set.BudgetId), fmt.Sprintf("%d", set.BudgetAmount)})
-		}
+		// for _, set := range sets {
+		// 	//w.WriteStructAll(set)
+		// 	w.Write([]string{client.SiteID, client.Shortname, fmt.Sprintf("%d", set.Id), set.Name, fmt.Sprintf("%d", set.BudgetId), fmt.Sprintf("%d", set.BudgetAmount)})
+		// }
 	}
 	w.Flush()
 	//fmt.Printf("%#v\n", campaignMap)
