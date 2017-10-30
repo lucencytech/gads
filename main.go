@@ -121,20 +121,29 @@ func main() {
 		}
 
 		report := getReport(&authConfig.Auth, headers)
-		// fmt.Println("report:", report)
+		// fmt.Println("report:", report
+
+		file, _ := os.Create("result.csv")
+		writer := csv.NewWriter(file)
+		defer writer.Flush()
+
+		var returnHeaders []string
+		for _, value := range report[0:1] {
+			for key, _ := range value {
+				returnHeaders = append(returnHeaders, key)
+			}
+
+			writer.Write(returnHeaders)
+		}
+
 
 		for _, line := range report[0:10] {
 			var lineList []string
-			for _, header := range headers {
+			for _, header := range returnHeaders {
 				lineList = append(lineList, line[header])
 			}
 
-			// for _, value := range line {
-			// 	lineList = append(lineList, value)
-			// }
-			// fmt.Println(lineList)
-			// fmt.Println("line type:", reflect.TypeOf(line))
-			fmt.Println(lineList)
+			writer.Write(lineList)
 		}
 
 
