@@ -7,10 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"encoding/csv"
+	// "os"
+	// "encoding/csv"
 	gads "github.com/Getsidecar/gads/v201705"
 	"github.com/Getsidecar/sidecar-go-utils/config"
-	"os"
+
 	// "strings"
 )
 
@@ -69,10 +70,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	f, _ := os.Create("test.csv")
-	w := csv.NewWriter(f)
-	w.Comma = '\t'
-	defer f.Close()
+	// f, _ := os.Create("test.csv")
+	// w := csv.NewWriter(f)
+	// defer w.Flush()
+	// w.Comma = '\t'
+	// defer f.Close()
 	for _, client := range clientConfigs {
 		if client.Status != "active" {
 			//fmt.Printf("Skipping %s due to inactive flag...\n", client.Shortname)
@@ -85,69 +87,122 @@ func main() {
 		fmt.Printf("Running %s...\n", client.Shortname)
 		authConfig.Auth.CustomerId = client.Accounts.Adwords.AccountId
 
-		headers := []string{
-			"AccountDescriptiveName",
-			"CampaignId",
-			"AdGroupId",
-			"Cost",
-			"Clicks",
-			"Impressions",
-			"Conversions",
-			"ConversionValue",
-			"OfferId",
-			"ExternalCustomerId",
-			"Date",
-			"AdGroupName",
-			"Device",
-		}
-
-
+		// headers := []string{
+		// 	"AccountDescriptiveName",
+		// 	"CampaignId",
+		// 	"AdGroupId",
+		// 	"Cost",
+		// 	"Clicks",
+		// 	"Impressions",
+		// 	"Conversions",
+		// 	"ConversionValue",
+		// 	"OfferId",
+		// 	"ExternalCustomerId",
+		// 	"Date",
+		// 	"AdGroupName",
+		// 	"Device",
+		// }
 		//
-		//query := `SELECT AccountDescriptiveName,
-		//				 CampaignId,
-		//				 AdGroupId,
-		//				 Cost,
-		//			 	 Clicks,
-		//				 Impressions,
-		//				 Conversions,
-		//				 ConversionValue,
-		//				 OfferId,
-		//				 ExternalCustomerId,
-		//				 Date,
-		//				 AdGroupName,
-		//				 Device
-		//		FROM SHOPPING_PERFORMANCE_REPORT
-		//		DURING YESTERDAY`
+		// // For using Report Download Service
+		// report := getReport(&authConfig.Auth, headers)
 
 
-		// For using AWQL
-		//report := getAWQLResult(&authConfig.Auth, query)
+// 		query := `SELECT
+// AccountCurrencyCode,
+// AccountDescriptiveName,
+// AccountTimeZone,
+// AdvertisingChannelType,
+// AdvertisingChannelSubType,
+// Amount,
+// BaseCampaignId,
+// BiddingStrategyType,
+// BudgetId,
+// CampaignDesktopBidModifier,
+// CampaignGroupId,
+// CampaignId,
+// CampaignMobileBidModifier,
+// CampaignName,
+// CampaignStatus,
+// CampaignTabletBidModifier,
+// CampaignTrialType,
+// EnhancedCpcEnabled,
+// ExternalCustomerId,
+// IsBudgetExplicitlyShared,
+// Period,
+// ServingStatus,
+// StartDate,
+// TrackingUrlTemplate,
+// UrlCustomParameters,
+//
+// AdNetworkType1,
+// AdNetworkType2,
+// ConversionCategoryName,
+// ConversionTypeName,
+// Date,
+// Device,
+// HourOfDay,
+// Slot,
+//
+// AllConversions,
+// AllConversionRate,
+// AllConversionValue,
+// AverageCpc,
+// AveragePosition,
+// Clicks,
+// ConversionRate,
+// Conversions,
+// ConversionValue,
+// Cost,
+// CostPerConversion,
+// CrossDeviceConversions,
+// Ctr,
+// Impressions,
+// PercentNewVisitors,
+// SearchBudgetLostImpressionShare,
+// SearchExactMatchImpressionShare,
+// SearchImpressionShare,
+// SearchRankLostImpressionShare
+// 				FROM CAMPAIGN_PERFORMANCE_REPORT
+// 				DURING YESTERDAY`
+//
+//
+// 		//For using AWQL
+// 		report := getAWQLResult(&authConfig.Auth, query)
 
-		// For using Report Download Service
-		report := getReport(&authConfig.Auth, headers)
 
-		file, _ := os.Create("result.csv")
-		writer := csv.NewWriter(file)
-		defer writer.Flush()
-
-		var returnHeaders []string
-		for _, value := range report[0:1] {
-			for key, _ := range value {
-				returnHeaders = append(returnHeaders, key)
-			}
-
-			writer.Write(returnHeaders)
+		rds := gads.NewReportDefinitionService(&authConfig.Auth)
+		reportFields, _ := rds.GetReportFields("CAMPAIGN_PERFORMANCE_REPORT")
+		// fmt.Println("reportFields:", reportFields)
+		fieldExclusions := make(map[string][]string)
+		for _, field := range reportFields {
+			fieldExclusions[field.FieldName] = field.ExclusiveFields
 		}
+		fmt.Println("fieldExclusions:", fieldExclusions)
 
 
-		for _, line := range report[0:100] {
-			var lineList []string
-			for _, header := range returnHeaders {
-				lineList = append(lineList, line[header])
-			}
+		// file, _ := os.Create("result.csv")
+		// writer := csv.NewWriter(file)
+		// defer writer.Flush()
+		//
+		// var returnHeaders []string
+		// for _, value := range report[0:1] {
+		// 	for key, _ := range value {
+		// 		returnHeaders = append(returnHeaders, key)
+		// 	}
+		//
+		// 	writer.Write(returnHeaders)
+		// }
+		//
+		//
+		// for _, line := range report[0:100] {
+		// 	var lineList []string
+		// 	for _, header := range returnHeaders {
+		// 		lineList = append(lineList, line[header])
+		// 	}
+		//
+		// 	writer.Write(lineList)
+		// }
 
-			writer.Write(lineList)
-		}
 	}
-	w.Flush()
+	// w.Flush()
 }

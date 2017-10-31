@@ -2,6 +2,9 @@ package v201705
 
 import (
 	"encoding/xml"
+	// "fmt"
+	"os"
+	"bufio"
 )
 
 type ReportDefinition struct {
@@ -19,6 +22,7 @@ type ReportDefinitionField struct {
 	FieldType           string          `xml:"fieldType"`
 	FieldBehavior       string          `xml:"fieldBehavior"`
 	EnumValues          []string        `xml:"enumValues"`
+	ExclusiveFields     []string        `xml:"exclusiveFields"`
 	CanSelect           bool            `xml:"canSelect"`
 	CanFilter           bool            `xml:"canFilter"`
 	IsEnumType          bool            `xml:"isEnumType"`
@@ -59,6 +63,12 @@ func (s *ReportDefinitionService) GetReportFields(report string) (fields []Repor
 			ReportType: report,
 		},
 	)
+	// fmt.Println("respBody:", string(respBody))
+	f, _ := os.Create("get-report-fields.xml")
+	w := bufio.NewWriter(f)
+	w.WriteString(string(respBody))
+	w.Flush()
+
 	if err != nil {
 		return fields, err
 	}
