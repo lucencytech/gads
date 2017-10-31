@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	// "os"
-	// "encoding/csv"
+	"os"
+	"encoding/csv"
 	gads "github.com/Getsidecar/gads/v201705"
 	"github.com/Getsidecar/sidecar-go-utils/config"
 
@@ -49,6 +49,30 @@ func getAWQLResult(auth *gads.Auth, query string) ([]map[string]string) {
 	return report
 }
 
+func writeReportToCsv(filename string, report []map[string]string) {
+	file, _ := os.Create(filename)
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	var returnHeaders []string
+	for _, value := range report[0:1] {
+		for key, _ := range value {
+			returnHeaders = append(returnHeaders, key)
+		}
+
+		writer.Write(returnHeaders)
+	}
+
+	for _, line := range report {
+		var lineList []string
+		for _, header := range returnHeaders {
+			lineList = append(lineList, line[header])
+		}
+
+		writer.Write(lineList)
+	}
+}
+
 func main() {
 	authConfig, err := gads.NewCredentialsFromFile("config.json")
 
@@ -87,24 +111,24 @@ func main() {
 		fmt.Printf("Running %s...\n", client.Shortname)
 		authConfig.Auth.CustomerId = client.Accounts.Adwords.AccountId
 
-		// headers := []string{
-		// 	"AccountDescriptiveName",
-		// 	"CampaignId",
-		// 	"AdGroupId",
-		// 	"Cost",
-		// 	"Clicks",
-		// 	"Impressions",
-		// 	"Conversions",
-		// 	"ConversionValue",
-		// 	"OfferId",
-		// 	"ExternalCustomerId",
-		// 	"Date",
-		// 	"AdGroupName",
-		// 	"Device",
-		// }
-		//
-		// // For using Report Download Service
-		// report := getReport(&authConfig.Auth, headers)
+		headers := []string{
+			"AccountDescriptiveName",
+			"CampaignId",
+			"AdGroupId",
+			"Cost",
+			"Clicks",
+			"Impressions",
+			"Conversions",
+			"ConversionValue",
+			"OfferId",
+			"ExternalCustomerId",
+			"Date",
+			"AdGroupName",
+			"Device",
+		}
+
+		// For using Report Download Service
+		report := getReport(&authConfig.Auth, headers)
 
 
 // 		query := `SELECT
@@ -170,15 +194,17 @@ func main() {
 // 		report := getAWQLResult(&authConfig.Auth, query)
 
 
-		rds := gads.NewReportDefinitionService(&authConfig.Auth)
-		reportFields, _ := rds.GetReportFields("CAMPAIGN_PERFORMANCE_REPORT")
-		// fmt.Println("reportFields:", reportFields)
-		fieldExclusions := make(map[string][]string)
-		for _, field := range reportFields {
-			fieldExclusions[field.FieldName] = field.ExclusiveFields
-		}
-		fmt.Println("fieldExclusions:", fieldExclusions)
+		// rds := gads.NewReportDefinitionService(&authConfig.Auth)
+		// reportFields, _ := rds.GetReportFields("CAMPAIGN_PERFORMANCE_REPORT")
+		// // fmt.Println("reportFields:", reportFields)
+		// fieldExclusions := make(map[string][]string)
+		// for _, field := range reportFields {
+		// 	fieldExclusions[field.FieldName] = field.ExclusiveFields
+		// }
+		// fmt.Println("fieldExclusions:", fieldExclusions)
 
+
+		writeReportToCsv("result.csv", report)
 
 		// file, _ := os.Create("result.csv")
 		// writer := csv.NewWriter(file)
