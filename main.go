@@ -12,7 +12,7 @@ import (
 	gads "github.com/Getsidecar/gads/v201705"
 	"github.com/Getsidecar/sidecar-go-utils/config"
 
-	// "strings"
+	"strings"
 )
 
 func getReport(auth *gads.Auth, headers []string) (collection []map[string]string) {
@@ -111,24 +111,25 @@ func main() {
 		fmt.Printf("Running %s...\n", client.Shortname)
 		authConfig.Auth.CustomerId = client.Accounts.Adwords.AccountId
 
-		headers := []string{
-			"AccountDescriptiveName",
-			"CampaignId",
-			"AdGroupId",
-			"Cost",
-			"Clicks",
-			"Impressions",
-			"Conversions",
-			"ConversionValue",
-			"OfferId",
-			"ExternalCustomerId",
-			"Date",
-			"AdGroupName",
-			"Device",
-		}
-
-		// For using Report Download Service
-		report := getReport(&authConfig.Auth, headers)
+		// headers := []string{
+		// 	"AccountDescriptiveName",
+		// 	"CampaignId",
+		// 	"AdGroupId",
+		// 	"Cost",
+		// 	"Clicks",
+		// 	"Impressions",
+		// 	"Conversions",
+		// 	"ConversionValue",
+		// 	"OfferId",
+		// 	"ExternalCustomerId",
+		// 	"Date",
+		// 	"AdGroupName",
+		// 	"Device",
+		// }
+		//
+		// // For using Report Download Service
+		// report := getReport(&authConfig.Auth, headers)
+		// writeReportToCsv("result.csv", report)
 
 
 // 		query := `SELECT
@@ -192,42 +193,23 @@ func main() {
 //
 // 		//For using AWQL
 // 		report := getAWQLResult(&authConfig.Auth, query)
+			// writeReportToCsv("result.csv", report)
 
 
-		// rds := gads.NewReportDefinitionService(&authConfig.Auth)
-		// reportFields, _ := rds.GetReportFields("CAMPAIGN_PERFORMANCE_REPORT")
-		// // fmt.Println("reportFields:", reportFields)
-		// fieldExclusions := make(map[string][]string)
-		// for _, field := range reportFields {
-		// 	fieldExclusions[field.FieldName] = field.ExclusiveFields
-		// }
-		// fmt.Println("fieldExclusions:", fieldExclusions)
+		rds := gads.NewReportDefinitionService(&authConfig.Auth)
+		reportFields, _ := rds.GetReportFields("CAMPAIGN_PERFORMANCE_REPORT")
+		// fmt.Println("reportFields:", reportFields)
+		var fieldExclusions  []map[string]string
+		for _, field := range reportFields {
+			fieldExclusion := make(map[string]string)
+			fieldExclusion["fieldName"] = field.FieldName
+			fieldExclusion["fieldExclusions"] = strings.Join(field.ExclusiveFields, ";")
+			fieldExclusions = append(fieldExclusions, fieldExclusion)
+		}
+		fmt.Println("fieldExclusions:", fieldExclusions)
 
+		writeReportToCsv("field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv", fieldExclusions)
 
-		writeReportToCsv("result.csv", report)
-
-		// file, _ := os.Create("result.csv")
-		// writer := csv.NewWriter(file)
-		// defer writer.Flush()
-		//
-		// var returnHeaders []string
-		// for _, value := range report[0:1] {
-		// 	for key, _ := range value {
-		// 		returnHeaders = append(returnHeaders, key)
-		// 	}
-		//
-		// 	writer.Write(returnHeaders)
-		// }
-		//
-		//
-		// for _, line := range report[0:100] {
-		// 	var lineList []string
-		// 	for _, header := range returnHeaders {
-		// 		lineList = append(lineList, line[header])
-		// 	}
-		//
-		// 	writer.Write(lineList)
-		// }
 
 	}
 	// w.Flush()
