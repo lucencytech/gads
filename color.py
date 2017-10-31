@@ -1,5 +1,8 @@
 #!/usr/local/bin/python3
 
+from pprint import pprint
+from operator import attrgetter
+
 class Node:
     color = None
     key = None
@@ -7,9 +10,13 @@ class Node:
     def __init__(self, k):
         self.key = k
     def __str__(self):
-        return "Node[key={}, color={}]".format(self.key, self.color)
+        return "{}<{}>".format(self.key, self.color)
     def __repr__(self):
         return self.__str__()
+    def __hash__(self):
+        return hash(self.key)
+    def __eq__(self, other):
+        return self.key == other.key
 
 class Graph:
     edges = set()
@@ -34,11 +41,21 @@ class Graph:
     def __str__(self):
         return str(self.graph)
 
+    def getDegree(self, node):
+        return len(self.graph[node.key])
+
+    def color(self):
+        nodes = self.nodes
+        ns = sorted(nodes, key=attrgetter('key'))
+        sortedNodes = sorted(ns, key=self.getDegree, reverse=True)
+        print("sortedNodes:", sortedNodes)
+
 def main():
     G = Graph()
 
     onHeader = True
-    f = open('field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv', 'r')
+    # f = open('field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv', 'r')
+    f = open('example-graph.csv', 'r')
     for line in f:
         # skip header line
         if onHeader:
@@ -53,7 +70,10 @@ def main():
                 continue
             G.addNode(Node(exclusion))
             G.addEdge(Node(fieldName), Node(exclusion))
-    print("Graph:", G)
+    print("Graph:")
+    pprint(G.graph)
+    G.color()
+    return G
 
 if __name__ == '__main__':
     main()

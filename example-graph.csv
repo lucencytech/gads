@@ -1,0 +1,12 @@
+fieldName, fieldExclusions
+A,H;B
+B,A;D
+C,D
+D,C;I;K
+E,F;K
+F,E;G
+G,F;H;K
+H,A;I;J;K;G
+I,H;J;D
+J,H;I;K
+K,J;H;G;E
