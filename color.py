@@ -19,33 +19,33 @@ class Node:
         return self.key == other.key
 
 class Graph:
-    edges = set()
-    nodes = set()
-    nodesByKey = {}
+    # edges = set()
+    # nodes = set()
+    # nodesByKey = {}
     graph = {}
 
     colors = list(range(1,11))
 
     # idempotent, as it only initializes empty edge set when necessary
     def addNode(self, node):
-        self.nodes.add(node)
-        self.nodesByKey[node.key] = node
-        if self.graph.get(node.key) is None:
-            self.graph[node.key] = set()
+        # self.nodes.add(node)
+        # self.nodesByKey[node.key] = node
+        if self.graph.get(node) is None:
+            self.graph[node] = set()
 
     # idempotent, since it just adds to sets
     def addEdge(self, n1, n2):
-        self.graph[n1.key].add(n2)
-        self.graph[n2.key].add(n1)
+        self.graph[n1].add(n2)
+        self.graph[n2].add(n1)
 
     def __str__(self):
         return str(self.graph)
 
     def getDegree(self, node):
-        return len(self.graph[node.key])
+        return len(self.graph[node])
 
     def color(self):
-        nodes = self.nodes
+        nodes = self.graph.keys()
         ns = sorted(nodes, key=attrgetter('key'))
         sortedNodes = sorted(ns, key=self.getDegree, reverse=True)
         print("sortedNodes:", sortedNodes)
@@ -55,14 +55,25 @@ class Graph:
         while len(sortedNodes) != 0:
             node = sortedNodes.pop(0)
             node.color = color
-            for candidateNode in sortedNodes:
+            print("Colored", node, "with color", color)
+            for foo in sortedNodes:
+                candidateNode = [k for k in self.graph.keys() if k.key == foo.key][0]
+                print("node:", node)
+                print("foo:", foo)
+                print("candidateNode:", candidateNode)
+                print("node's adjacent nodes:", self.graph.get(node))
+
                 # Don't color nodes that already have a color
                 if candidateNode.color is not None:
+                    print("Not recoloring", candidateNode)
                     continue
                 # Don't color any adjacent nodes with the same color
-                if self.graph.get(node.key) == candidateNode.key:
+                if candidateNode in self.graph.get(node):
+                    print("Not coloring", candidateNode, "because it's adjacent to", node)
                     continue
                 candidateNode.color = color
+                sortedNodes.remove(candidateNode)
+                print("Colored", candidateNode, "with color", color)
                 # sortedNodes = [n for n in sortedNodes if n.key != candidateNode.key]
             color += 1
 
@@ -73,25 +84,38 @@ def main():
     onHeader = True
     # f = open('field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv', 'r')
     f = open('example-graph.csv', 'r')
+    lines = []
     for line in f:
         # skip header line
         if onHeader:
             onHeader = False
             continue
+        lines.append(line)
+
+    nodesByFieldName = {}
+    for line in lines:
         fieldName, exclusionsString = line.strip().split(',')
         exclusions = exclusionsString.split(';')
 
-        G.addNode(Node(fieldName))
+        node = Node(fieldName)
+        G.addNode(node)
+        nodesByFieldName[fieldName] = node
+
+    for line in lines:
+        fieldName, exclusionsString = line.strip().split(',')
+        exclusions = exclusionsString.split(';')
+
         for exclusion in exclusions:
             if exclusion == '' or exclusion is None:
                 continue
-            G.addNode(Node(exclusion))
-            G.addEdge(Node(fieldName), Node(exclusion))
+            # G.addNode(nodesByFieldName[exclusion])
+            G.addEdge(nodesByFieldName[fieldName], nodesByFieldName[exclusion])
+
     print("Graph:")
     pprint(G.graph)
     G.color()
     pprint(G.graph)
-    pprint(G.nodes)
+
 
     return G
 
