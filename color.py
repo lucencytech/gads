@@ -50,6 +50,23 @@ class Graph:
         sortedNodes = sorted(ns, key=self.getDegree, reverse=True)
         print("sortedNodes:", sortedNodes)
 
+        color = 1
+
+        while len(sortedNodes) != 0:
+            node = sortedNodes.pop(0)
+            node.color = color
+            for candidateNode in sortedNodes:
+                # Don't color nodes that already have a color
+                if candidateNode.color is not None:
+                    continue
+                # Don't color any adjacent nodes with the same color
+                if self.graph.get(node.key) == candidateNode.key:
+                    continue
+                candidateNode.color = color
+                # sortedNodes = [n for n in sortedNodes if n.key != candidateNode.key]
+            color += 1
+
+
 def main():
     G = Graph()
 
@@ -73,6 +90,9 @@ def main():
     print("Graph:")
     pprint(G.graph)
     G.color()
+    pprint(G.graph)
+    pprint(G.nodes)
+
     return G
 
 if __name__ == '__main__':
