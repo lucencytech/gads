@@ -156,6 +156,8 @@ func main() {
 
 		//For using AWQL
 		writeQueryReportToCsv("report1.awql", "report1.csv", &authConfig.Auth)
+		writeQueryReportToCsv("report2.awql", "report2.csv", &authConfig.Auth)
+		writeQueryReportToCsv("report3.awql", "report3.csv", &authConfig.Auth)
 
 
 		// writeFieldExclusionsToCsv("field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv", "CAMPAIGN_PERFORMANCE_REPORT", &authConfig.Auth)
