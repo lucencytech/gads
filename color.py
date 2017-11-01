@@ -44,8 +44,13 @@ class Graph:
     def getDegree(self, node):
         return len(self.graph[node])
 
+    # an implementation of the Welsh-Powell algorithm to color a graph
+    # this does better than a greedy algorithm by using a simple heuristic:
+    # start coloring the graph using the nodes of highest degree
     def color(self):
         nodes = self.graph.keys()
+        # sort nodes by degree, breaking ties alphabetically
+        # this gives a deterministic order, regardless of the order of the inputs
         ns = sorted(nodes, key=attrgetter('key'))
         sortedNodes = sorted(ns, key=self.getDegree, reverse=True)
         print("sortedNodes:", sortedNodes)
@@ -97,8 +102,8 @@ def main():
     G = Graph()
 
     onHeader = True
-    # f = open('field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv', 'r')
-    f = open('example-graph.csv', 'r')
+    f = open('field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv', 'r')
+    # f = open('example-graph.csv', 'r')
     lines = []
     for line in f:
         # skip header line
@@ -130,6 +135,13 @@ def main():
     pprint(G.graph)
     G.color()
     pprint(G.graph)
+
+    nodes = G.graph.keys()
+    maxColor = max([node.color for node in nodes])
+    print("maxColor:", maxColor)
+    for color in range(1,maxColor+1):
+        nodeKeysWithThisColor = [n.key for n in nodes if n.color == color]
+        print("Report", color, ": ", nodeKeysWithThisColor)
 
 
     return G
