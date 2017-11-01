@@ -89,6 +89,12 @@ func writeFieldExclusionsToCsv(filename string, reportName string, auth *gads.Au
 	writeReportToCsv(filename, fieldExclusions)
 }
 
+func writeQueryReportToCsv(awqlFilename string, csvFilename string, auth *gads.Auth) {
+	queryBytes, _ := ioutil.ReadFile(awqlFilename)
+	report := getAWQLResult(auth, string(queryBytes))
+	writeReportToCsv(csvFilename, report)
+}
+
 func main() {
 	authConfig, err := gads.NewCredentialsFromFile("config.json")
 
@@ -148,72 +154,8 @@ func main() {
 		// writeReportToCsv("result.csv", report)
 
 
-		query := `SELECT
-		Period,
-		UrlCustomParameters,
-		AccountCurrencyCode,
-		AccountDescriptiveName,
-		AccountTimeZone,
-		AdNetworkType1,
-		AdNetworkType2,
-		AdvertisingChannelSubType,
-		AdvertisingChannelType,
-		Amount,
-		BaseCampaignId,
-		BiddingStrategyId,
-		BiddingStrategyName,
-		BiddingStrategyType,
-		BidType,
-		BudgetId,
-		CampaignDesktopBidModifier,
-		CampaignGroupId,
-		CampaignId,
-		CampaignMobileBidModifier,
-		CampaignName,
-		CampaignStatus,
-		CampaignTabletBidModifier,
-		CampaignTrialType,
-		ClickType,
-		ConversionCategoryName,
-		ConversionRate,
-		Conversions,
-		ConversionTrackerId,
-		ConversionTypeName,
-		ConversionValue,
-		CostPerConversion,
-		CostPerCurrentModelAttributedConversion,
-		CurrentModelAttributedConversions,
-		CurrentModelAttributedConversionValue,
-		CustomerDescriptiveName,
-		Date,
-		DayOfWeek,
-		Device,
-		EndDate,
-		EnhancedCpcEnabled,
-		EnhancedCpvEnabled,
-		ExternalConversionSource,
-		ExternalCustomerId,
-		IsBudgetExplicitlyShared,
-		LabelIds,
-		Labels,
-		Month,
-		MonthOfYear,
-		Quarter,
-		ServingStatus,
-		Slot,
-		StartDate,
-		TrackingUrlTemplate,
-		ValuePerConversion,
-		ValuePerCurrentModelAttributedConversion,
-		Week,
-		Year
-		FROM CAMPAIGN_PERFORMANCE_REPORT
-		DURING YESTERDAY`
-
-
 		//For using AWQL
-		report := getAWQLResult(&authConfig.Auth, query)
-		writeReportToCsv("report1.csv", report)
+		writeQueryReportToCsv("report1.awql", "report1.csv", &authConfig.Auth)
 
 
 		// writeFieldExclusionsToCsv("field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv", "CAMPAIGN_PERFORMANCE_REPORT", &authConfig.Auth)
