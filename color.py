@@ -50,32 +50,47 @@ class Graph:
         sortedNodes = sorted(ns, key=self.getDegree, reverse=True)
         print("sortedNodes:", sortedNodes)
 
-        color = 1
+        thisColor = 1
 
         while len(sortedNodes) != 0:
             node = sortedNodes.pop(0)
-            node.color = color
-            print("Colored", node, "with color", color)
+            node.color = thisColor
+            nodesWithThisColor = [node]
+            print("Colored", node, "with color", thisColor)
             for foo in sortedNodes:
+                shouldColor = True # assume we should color it until we find otherwise
                 candidateNode = [k for k in self.graph.keys() if k.key == foo.key][0]
-                print("node:", node)
-                print("foo:", foo)
+                # print("node:", node)
+                # print("foo:", foo)
                 print("candidateNode:", candidateNode)
-                print("node's adjacent nodes:", self.graph.get(node))
+                # print("node's adjacent nodes:", self.graph.get(node))
 
                 # Don't color nodes that already have a color
                 if candidateNode.color is not None:
                     print("Not recoloring", candidateNode)
+                    shouldColor = False
                     continue
                 # Don't color any adjacent nodes with the same color
-                if candidateNode in self.graph.get(node):
-                    print("Not coloring", candidateNode, "because it's adjacent to", node)
-                    continue
-                candidateNode.color = color
-                sortedNodes.remove(candidateNode)
-                print("Colored", candidateNode, "with color", color)
-                # sortedNodes = [n for n in sortedNodes if n.key != candidateNode.key]
-            color += 1
+                for nodeWithThisColor in nodesWithThisColor:
+                    if candidateNode in self.graph.get(nodeWithThisColor):
+                        print("Not coloring", candidateNode, "because it connects to", nodeWithThisColor)
+                        shouldColor = False
+                        break
+                # if candidateNode in self.graph.get(node):
+                #     print("Not coloring", candidateNode, "because it's adjacent to", node)
+                #     continue
+                if shouldColor:
+                    candidateNode.color = thisColor
+                    # sortedNodes.remove(candidateNode)
+                    nodesWithThisColor.append(candidateNode)
+                    print("Colored", candidateNode, "with color", thisColor)
+
+            thisColor += 1
+            newSortedNodes = []
+            for n in sortedNodes:
+                if n not in nodesWithThisColor:
+                    newSortedNodes.append(n)
+            sortedNodes = newSortedNodes
 
 
 def main():
