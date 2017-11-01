@@ -73,6 +73,22 @@ func writeReportToCsv(filename string, report []map[string]string) {
 	}
 }
 
+func writeFieldExclusionsToCsv(filename string, reportName string, auth *gads.Auth) {
+	rds := gads.NewReportDefinitionService(auth)
+	reportFields, _ := rds.GetReportFields(reportName)
+	// fmt.Println("reportFields:", reportFields)
+	var fieldExclusions  []map[string]string
+	for _, field := range reportFields {
+		fieldExclusion := make(map[string]string)
+		fieldExclusion["fieldName"] = field.FieldName
+		fieldExclusion["fieldExclusions"] = strings.Join(field.ExclusiveFields, ";")
+		fieldExclusions = append(fieldExclusions, fieldExclusion)
+	}
+	fmt.Println("fieldExclusions:", fieldExclusions)
+
+	writeReportToCsv(filename, fieldExclusions)
+}
+
 func main() {
 	authConfig, err := gads.NewCredentialsFromFile("config.json")
 
@@ -196,19 +212,7 @@ func main() {
 			// writeReportToCsv("result.csv", report)
 
 
-		rds := gads.NewReportDefinitionService(&authConfig.Auth)
-		reportFields, _ := rds.GetReportFields("CAMPAIGN_PERFORMANCE_REPORT")
-		// fmt.Println("reportFields:", reportFields)
-		var fieldExclusions  []map[string]string
-		for _, field := range reportFields {
-			fieldExclusion := make(map[string]string)
-			fieldExclusion["fieldName"] = field.FieldName
-			fieldExclusion["fieldExclusions"] = strings.Join(field.ExclusiveFields, ";")
-			fieldExclusions = append(fieldExclusions, fieldExclusion)
-		}
-		fmt.Println("fieldExclusions:", fieldExclusions)
-
-		writeReportToCsv("field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv", fieldExclusions)
+		writeFieldExclusionsToCsv("field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv", "CAMPAIGN_PERFORMANCE_REPORT", &authConfig.Auth)
 
 
 	}
