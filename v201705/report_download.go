@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type ReportDownloadService struct {
@@ -18,6 +19,27 @@ type ReportDownloadService struct {
 type reportDefinitionXml struct {
 	*ReportDefinition
 	XMLName xml.Name
+}
+
+//type is equiv to errorString eg AuthorizationError.USER_PERMISSION_DENIED
+type ApiError struct {
+	Type string `xml:"type"`
+}
+
+type ReportDownloadError struct {
+	XMLName  xml.Name `xml:"reportDownloadError"`
+	ApiError ApiError
+}
+
+func (s ApiError) Error() string {
+	return s.Type
+}
+
+func (s ApiError) Code() string {
+	if parts := strings.Split(s.Type, "."); len(parts) > 1 {
+		return parts[1]
+	}
+	return s.Type
 }
 
 func NewReportDownloadService(auth *Auth) *ReportDownloadService {
@@ -44,11 +66,15 @@ func (s *ReportDownloadService) Get(reportDefinition ReportDefinition) (res inte
 		return res, err
 	}
 	defer resp.Body.Close()
-	/*respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return res, err
+
+	if resp.StatusCode != 200 {
+		dec := xml.NewDecoder(resp.Body)
+		el := &ReportDownloadError{}
+		if err := dec.Decode(el); err != nil {
+			return nil, err
+		}
+		return nil, el.ApiError
 	}
-	return string(respBody), err*/
 	return parseReport(resp.Body)
 }
 
