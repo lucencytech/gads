@@ -2,6 +2,7 @@ package v201705
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -48,4 +49,22 @@ func TestReportDownloadAuthError(t *testing.T) {
 		t.Errorf("error expected to satisfy ErrorCode interface")
 	}
 
+}
+
+func TestReportQueryStream(t *testing.T) {
+	query := `SELECT  AccountDescriptiveName, AdvertisingChannelType, Clicks, ConversionValue, Cost, Impressions, Device, ExternalCustomerId, DayOfWeek, CampaignId  FROM CAMPAIGN_PERFORMANCE_REPORT  DURING YESTERDAY`
+	config := getTestConfig()
+	svc := NewReportDownloadService(&config.Auth)
+
+	report, err := svc.StreamAWQL(query, "CSV")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := ioutil.ReadAll(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(b))
 }
