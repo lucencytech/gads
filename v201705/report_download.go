@@ -78,31 +78,34 @@ func (s *ReportDownloadService) Get(reportDefinition ReportDefinition) (res inte
 	return parseReport(resp.Body)
 }
 
-func (s *ReportDownloadService) AWQL(awql string, fmt string) (res interface{}, err error) {
+func (s *ReportDownloadService) StreamAWQL(awql string, fmt string) (io.ReadCloser, error) {
 	form := url.Values{}
 	form.Add("__rdquery", awql)
 	form.Add("__fmt", fmt)
 	resp, err := s.makeRequest(form)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
-	defer resp.Body.Close()
-	/*respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return res, err
-	}
-	return string(respBody), err*/
 
-	// if we didn't get a 200 bubble up the error
 	if resp.StatusCode != 200 {
 		response, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return res, err
+			return nil, err
 		}
-		return res, errors.New(string(response))
+		return nil, errors.New(string(response))
 	}
 
-	return parseReport(resp.Body)
+	return resp.Body, nil
+}
+
+func (s *ReportDownloadService) AWQL(awql string, fmt string) (interface{}, error) {
+	body, err := s.StreamAWQL(awql, fmt)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+
+	return parseReport(body)
 }
 
 // Make our http request using the given form (re-usable for either XML or AWQL)
