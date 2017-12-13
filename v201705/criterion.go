@@ -341,6 +341,10 @@ type WebpageCriterion struct {
 	CriteriaSamples  []string         `xml:"criteriaSamples"`
 }
 
+type LocationGroups struct {
+	Id int64 `xml:"id,omitempty"`
+}
+
 type Criterion interface{}
 
 func criterionUnmarshalXML(dec *xml.Decoder, start xml.StartElement) (Criterion, error) {
@@ -437,6 +441,11 @@ func criterionUnmarshalXML(dec *xml.Decoder, start xml.StartElement) (Criterion,
 		c := WebpageCriterion{}
 		err := dec.DecodeElement(&c, &start)
 		return c, err
+	case "LocationGroups":
+		c := LocationGroups{}
+		err := dec.DecodeElement(&c, &start)
+		return c, err
+
 	default:
 		return nil, fmt.Errorf("unknown criterion type %#v", criterionType)
 	}
