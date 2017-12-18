@@ -102,7 +102,7 @@ def main():
     G = Graph()
 
     onHeader = True
-    f = open('field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv', 'r')
+    f = open('field-selections.CAMPAIGN_PERFORMANCE_REPORT.csv', 'r')
     # f = open('example-graph.csv', 'r')
     lines = []
     for line in f:
@@ -129,7 +129,10 @@ def main():
             if exclusion == '' or exclusion is None:
                 continue
             # G.addNode(nodesByFieldName[exclusion])
-            G.addEdge(nodesByFieldName[fieldName], nodesByFieldName[exclusion])
+            try:
+                G.addEdge(nodesByFieldName[fieldName], nodesByFieldName[exclusion])
+            except KeyError:
+                pass
 
     print("Graph:")
     pprint(G.graph)
