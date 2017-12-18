@@ -7,8 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"os"
 	"encoding/csv"
+	"os"
+
 	gads "github.com/Getsidecar/gads/v201705"
 	"github.com/Getsidecar/sidecar-go-utils/config"
 
@@ -20,9 +21,9 @@ func getReport(auth *gads.Auth, headers []string) (collection []map[string]strin
 	rds := gads.NewReportDownloadService(auth)
 
 	rd := gads.ReportDefinition{
-		ReportName: "ReportNameGoesHere",
-		ReportType: "SHOPPING_PERFORMANCE_REPORT",
-		DateRangeType: "YESTERDAY",
+		ReportName:     "ReportNameGoesHere",
+		ReportType:     "SHOPPING_PERFORMANCE_REPORT",
+		DateRangeType:  "YESTERDAY",
 		DownloadFormat: "CSV",
 		Selector: gads.Selector{
 			Fields: headers,
@@ -38,7 +39,7 @@ func getReport(auth *gads.Auth, headers []string) (collection []map[string]strin
 	return collection
 }
 
-func getAWQLResult(auth *gads.Auth, query string) ([]map[string]string) {
+func getAWQLResult(auth *gads.Auth, query string) []map[string]string {
 	rds := gads.NewReportDownloadService(auth)
 	report, err := rds.AWQL(query, "CSV")
 	if err != nil {
@@ -77,7 +78,7 @@ func writeFieldExclusionsToCsv(filename string, reportName string, auth *gads.Au
 	rds := gads.NewReportDefinitionService(auth)
 	reportFields, _ := rds.GetReportFields(reportName)
 	// fmt.Println("reportFields:", reportFields)
-	var fieldExclusions  []map[string]string
+	var fieldExclusions []map[string]string
 	for _, field := range reportFields {
 		fieldExclusion := make(map[string]string)
 		fieldExclusion["fieldName"] = field.FieldName
@@ -153,15 +154,12 @@ func main() {
 		// report := getReport(&authConfig.Auth, headers)
 		// writeReportToCsv("result.csv", report)
 
-
 		//For using AWQL
-		writeQueryReportToCsv("report1.awql", "report1.csv", &authConfig.Auth)
-		writeQueryReportToCsv("report2.awql", "report2.csv", &authConfig.Auth)
-		writeQueryReportToCsv("report3.awql", "report3.csv", &authConfig.Auth)
-
+		writeQueryReportToCsv("campaign-performance.awql", "campaign-performance.csv", &authConfig.Auth)
+		// writeQueryReportToCsv("report2.awql", "report2.csv", &authConfig.Auth)
+		// writeQueryReportToCsv("report3.awql", "report3.csv", &authConfig.Auth)
 
 		// writeFieldExclusionsToCsv("field-exclusions.CAMPAIGN_PERFORMANCE_REPORT.csv", "CAMPAIGN_PERFORMANCE_REPORT", &authConfig.Auth)
-
 
 	}
 	// w.Flush()
