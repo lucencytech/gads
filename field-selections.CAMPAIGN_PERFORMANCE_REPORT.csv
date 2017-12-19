@@ -1,4 +1,5 @@
 fieldName,fieldExclusions
+AccountDescriptiveName,
 AccountTimeZone,
 AllConversionRate,HourOfDay;Slot
 AllConversions,HourOfDay;Slot
