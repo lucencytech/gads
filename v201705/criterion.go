@@ -341,6 +341,12 @@ type WebpageCriterion struct {
 	CriteriaSamples  []string         `xml:"criteriaSamples"`
 }
 
+type IpBlockCriterion struct {
+	Id int64 `xml:"id,omitempty"`
+}
+
+type OtherCriterion struct{}
+
 type Criterion interface{}
 
 func criterionUnmarshalXML(dec *xml.Decoder, start xml.StartElement) (Criterion, error) {
@@ -437,8 +443,14 @@ func criterionUnmarshalXML(dec *xml.Decoder, start xml.StartElement) (Criterion,
 		c := WebpageCriterion{}
 		err := dec.DecodeElement(&c, &start)
 		return c, err
+	case "IpBlock":
+		c := IpBlockCriterion{}
+		err := dec.DecodeElement(&c, &start)
+		return c, err
 	default:
-		return nil, fmt.Errorf("unknown criterion type %#v", criterionType)
+		c := OtherCriterion{}
+		err := dec.DecodeElement(&c, &start)
+		return c, err
 	}
 }
 
