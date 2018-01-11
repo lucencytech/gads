@@ -2,6 +2,7 @@ package v201705
 
 import (
 	"encoding/xml"
+	"fmt"
 )
 
 type AdGroupAdService struct {
@@ -11,6 +12,12 @@ type AdGroupAdService struct {
 type AppUrl struct {
 	Url    string `xml:"url"`
 	OsType string `xml:"osType"` // "OS_TYPE_IOS", "OS_TYPE_ANDROID", "UNKNOWN"
+}
+
+type Ad struct {
+	AdGroupId int64  `xml:"-"`
+	Id        int64  `xml:"id,omitempty"`
+	Status    string `xml:"-"`
 }
 
 type TextAd struct {
@@ -327,10 +334,11 @@ func (s *AdGroupAdService) Mutate(adGroupAdOperations AdGroupAdOperations) (adGr
 	operations := []adGroupAdOperation{}
 	for action, adGroupAds := range adGroupAdOperations {
 		for _, adGroupAd := range adGroupAds {
+			ad := []interface{}{adGroupAd}
 			operations = append(operations,
 				adGroupAdOperation{
 					Action:    action,
-					AdGroupAd: []interface{}{adGroupAd},
+					AdGroupAd: ad,
 				},
 			)
 		}
@@ -345,6 +353,9 @@ func (s *AdGroupAdService) Mutate(adGroupAdOperations AdGroupAdOperations) (adGr
 		},
 		Ops: operations,
 	}
+
+	fmt.Printf("%+v", mutation)
+
 	respBody, err := s.Auth.request(adGroupAdServiceUrl, "mutate", mutation)
 	if err != nil {
 		return adGroupAds, err
