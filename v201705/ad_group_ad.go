@@ -40,11 +40,11 @@ type ExpandedTextAd struct {
 	TrackingUrlTemplate string                 `xml:"trackingUrlTemplate,omitempty"`
 	UrlCustomParameters *CustomParameters      `xml:"urlCustomParameters,omitempty"`
 	Type                string                 `xml:"type,omitempty"`
-	HeadlinePart1       string                 `xml:"headlinePart1"`
-	HeadlinePart2       string                 `xml:"headlinePart2"`
-	Description         string                 `xml:"description"`
-	Path1               string                 `xml:"path1"`
-	Path2               string                 `xml:"path2"`
+	HeadlinePart1       string                 `xml:"headlinePart1,omitempty"`
+	HeadlinePart2       string                 `xml:"headlinePart2,omitempty"`
+	Description         string                 `xml:"description,omitempty"`
+	Path1               string                 `xml:"path1,omitempty"`
+	Path2               string                 `xml:"path2,omitempty"`
 	ExperimentData      *AdGroupExperimentData `xml:"-"`
 	Status              string                 `xml:"-"`
 	Labels              []Label                `xml:"-"`
