@@ -354,8 +354,6 @@ func (s *AdGroupAdService) Mutate(adGroupAdOperations AdGroupAdOperations) (adGr
 		Ops: operations,
 	}
 
-	fmt.Printf("%+v", mutation)
-
 	respBody, err := s.Auth.request(adGroupAdServiceUrl, "mutate", mutation)
 	if err != nil {
 		return adGroupAds, err
