@@ -2,7 +2,7 @@
 
 Package gads provides a wrapper for the Google Adwords SOAP API.  Based off of
 [colinmutter/gads](https://github.com/colinmutter/gads), this version
-was updated to support v201705 and additional functionality that was missing from 
+was updated to support v201710 and additional functionality that was missing from 
 the current versions.  
 
 ## Installation
@@ -35,11 +35,11 @@ oauth configuration file flag.
 
 ## Versions
 
-This project currently supports ~~v201409 and v201506~~ v201705.  To select
+This project currently supports ~~v201409 and v201506 v201705~~ v201710.  To select
 the appropriate version, import the specific package:
 
 	  import (
-	    gads "github.com/Getsidecar/gads/v201705"
+	    gads "github.com/Getsidecar/gads/v201710"
 	  )
 
 
