@@ -14,12 +14,6 @@ type AppUrl struct {
 	OsType string `xml:"osType"` // "OS_TYPE_IOS", "OS_TYPE_ANDROID", "UNKNOWN"
 }
 
-type Ad struct {
-	AdGroupId int64  `xml:"-"`
-	Id        int64  `xml:"id,omitempty"`
-	Status    string `xml:"-"`
-}
-
 type TextAd struct {
 	AdGroupId           int64             `xml:"-"`
 	Id                  int64             `xml:"id,omitempty"`
