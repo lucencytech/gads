@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/xml"
-	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -88,11 +86,12 @@ func (s *ReportDownloadService) StreamAWQL(awql string, fmt string) (io.ReadClos
 	}
 
 	if resp.StatusCode != 200 {
-		response, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
+		dec := xml.NewDecoder(resp.Body)
+		el := &ReportDownloadError{}
+		if err := dec.Decode(el); err != nil {
 			return nil, err
 		}
-		return nil, errors.New(string(response))
+		return nil, el.ApiError
 	}
 
 	return resp.Body, nil
