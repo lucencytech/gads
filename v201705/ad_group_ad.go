@@ -2,7 +2,6 @@ package v201705
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
 type AdGroupAdService struct {
