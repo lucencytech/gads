@@ -35,6 +35,7 @@ type AdGroup struct {
 	BiddingStrategyConfiguration []BiddingStrategyConfiguration `xml:"biddingStrategyConfiguration"`
 	ContentBidCriterionTypeGroup *string                        `xml:"contentBidCriterionTypeGroup"`
 	UrlCustomParameters          *CustomParameters              `xml:"urlCustomParameters"`
+	Labels                       []Label                        `xml:"labels"`
 }
 
 type AdGroupOperations map[string][]AdGroup
