@@ -128,18 +128,11 @@ type Campaign struct {
 	StartDate                      string                          `xml:"startDate,omitempty"`
 	EndDate                        string                          `xml:"endDate,omitempty"`
 	BudgetId                       int64                           `xml:"budget>budgetId"`
-<<<<<<< HEAD:v201710/campaign.go
-	BudgetDeliveryMethod           string                          `xml:"budget>deliveryMethod"`
-	ConversionOptimizerEligibility *conversionOptimizerEligibility `xml:"conversionOptimizerEligibility"`
-	FrequencyCap                   *FrequencyCap                   `xml:"frequencyCap"`
-	Settings                       []CampaignSetting               `xml:"settings"`
-=======
 	BudgetDeliveryMethod           string                          `xml:"-"`
 	ConversionOptimizerEligibility *conversionOptimizerEligibility `xml:"conversionOptimizerEligibility,omitempty"`
 	AdServingOptimizationStatus    string                          `xml:"adServingOptimizationStatus,omitempty"`
 	FrequencyCap                   *FrequencyCap                   `xml:"frequencyCap,omitempty"`
 	Settings                       []CampaignSetting               `xml:"settings,omitempty"`
->>>>>>> merger:v201705/campaign.go
 	AdvertisingChannelType         string                          `xml:"advertisingChannelType,omitempty"`    // "UNKNOWN", "SEARCH", "DISPLAY", "SHOPPING"
 	AdvertisingChannelSubType      string                          `xml:"advertisingChannelSubType,omitempty"` // "UNKNOWN", "SEARCH_MOBILE_APP", "DISPLAY_MOBILE_APP", "SEARCH_EXPRESS", "DISPLAY_EXPRESS"
 	NetworkSetting                 *NetworkSetting                 `xml:"networkSetting,omitempty"`
