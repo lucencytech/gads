@@ -35,11 +35,11 @@ oauth configuration file flag.
 
 ## Versions
 
-This project currently supports ~~v201409 and v201506 v201705~~ v201710.  To select
+This project currently supports v201605, v201607 and v201609.  To select
 the appropriate version, import the specific package:
 
 	  import (
-	    gads "github.com/Getsidecar/gads/v201710"
+	    gads "github.com/colinmutter/gads/v201710"
 	  )
 
 
