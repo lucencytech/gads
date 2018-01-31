@@ -122,24 +122,32 @@ type CustomParameters struct {
 type Campaign struct {
 	Id                             int64                           `xml:"id,omitempty"`
 	Name                           string                          `xml:"name"`
-	BudgetAmount                   int64                           `xml:"budget>amount>microAmount,omitempty"`
-	Status                         string                          `xml:"status"`                  // Status: "ENABLED", "PAUSED", "REMOVED"
+	BudgetAmount                   int64                           `xml:"-"`
+	Status                         string                          `xml:"status,omitempty"`        // Status: "ENABLED", "PAUSED", "REMOVED"
 	ServingStatus                  *string                         `xml:"servingStatus,omitempty"` // ServingStatus: "SERVING", "NONE", "ENDED", "PENDING", "SUSPENDED"
-	StartDate                      string                          `xml:"startDate"`
-	EndDate                        *string                         `xml:"endDate,omitempty"`
+	StartDate                      string                          `xml:"startDate,omitempty"`
+	EndDate                        string                          `xml:"endDate,omitempty"`
 	BudgetId                       int64                           `xml:"budget>budgetId"`
+<<<<<<< HEAD:v201710/campaign.go
 	BudgetDeliveryMethod           string                          `xml:"budget>deliveryMethod"`
 	ConversionOptimizerEligibility *conversionOptimizerEligibility `xml:"conversionOptimizerEligibility"`
 	FrequencyCap                   *FrequencyCap                   `xml:"frequencyCap"`
 	Settings                       []CampaignSetting               `xml:"settings"`
+=======
+	BudgetDeliveryMethod           string                          `xml:"-"`
+	ConversionOptimizerEligibility *conversionOptimizerEligibility `xml:"conversionOptimizerEligibility,omitempty"`
+	AdServingOptimizationStatus    string                          `xml:"adServingOptimizationStatus,omitempty"`
+	FrequencyCap                   *FrequencyCap                   `xml:"frequencyCap,omitempty"`
+	Settings                       []CampaignSetting               `xml:"settings,omitempty"`
+>>>>>>> merger:v201705/campaign.go
 	AdvertisingChannelType         string                          `xml:"advertisingChannelType,omitempty"`    // "UNKNOWN", "SEARCH", "DISPLAY", "SHOPPING"
-	AdvertisingChannelSubType      *string                         `xml:"advertisingChannelSubType,omitempty"` // "UNKNOWN", "SEARCH_MOBILE_APP", "DISPLAY_MOBILE_APP", "SEARCH_EXPRESS", "DISPLAY_EXPRESS"
-	NetworkSetting                 *NetworkSetting                 `xml:"networkSetting"`
-	Labels                         []Label                         `xml:"labels"`
+	AdvertisingChannelSubType      string                          `xml:"advertisingChannelSubType,omitempty"` // "UNKNOWN", "SEARCH_MOBILE_APP", "DISPLAY_MOBILE_APP", "SEARCH_EXPRESS", "DISPLAY_EXPRESS"
+	NetworkSetting                 *NetworkSetting                 `xml:"networkSetting,omitempty"`
+	Labels                         []Label                         `xml:"labels,omitempty"`
 	BiddingStrategyConfiguration   *BiddingStrategyConfiguration   `xml:"biddingStrategyConfiguration"`
 	ForwardCompatibilityMap        *map[string]string              `xml:"forwardCompatibilityMap,omitempty"`
-	TrackingUrlTemplate            *string                         `xml:"trackingUrlTemplate"`
-	UrlCustomParameters            *CustomParameters               `xml:"urlCustomParameters"`
+	TrackingUrlTemplate            *string                         `xml:"trackingUrlTemplate,omitempty"`
+	UrlCustomParameters            *CustomParameters               `xml:"urlCustomParameters,omitempty"`
 	Errors                         []error                         `xml:"-"`
 }
 

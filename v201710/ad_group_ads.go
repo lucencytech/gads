@@ -33,6 +33,16 @@ func (a1 AdGroupAds) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 		})
 		e.EncodeElement(ad.Status, xml.StartElement{Name: xml.Name{"", "status"}})
 		e.EncodeElement(ad.Labels, xml.StartElement{Name: xml.Name{"", "labels"}})
+	case Ad:
+		ad := a.(Ad)
+		e.EncodeElement(ad.AdGroupId, xml.StartElement{Name: xml.Name{"", "adGroupId"}})
+		e.EncodeElement(ad, xml.StartElement{
+			xml.Name{"", "ad"},
+			[]xml.Attr{
+				xml.Attr{xml.Name{"http://www.w3.org/2001/XMLSchema-instance", "type"}, "Ad"},
+			},
+		})
+		e.EncodeElement(ad.Status, xml.StartElement{Name: xml.Name{"", "status"}})
 	case ImageAd:
 		return ERROR_NOT_YET_IMPLEMENTED
 	case TemplateAd:
