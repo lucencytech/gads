@@ -5,12 +5,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	gads "github.com/Getsidecar/gads/v201705"
+	"io/ioutil"
+	"log"
+
+	gads "github.com/Getsidecar/gads/v201710"
 	"github.com/toqueteos/webbrowser"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"io/ioutil"
-	"log"
 )
 
 var (
