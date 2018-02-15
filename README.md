@@ -39,7 +39,7 @@ This project currently supports v201605, v201607 and v201609.  To select
 the appropriate version, import the specific package:
 
 	  import (
-	    gads "github.com/colinmutter/gads/v201710"
+	    gads "github.com/Getsidecar/gads/v201710"
 	  )
 
 
