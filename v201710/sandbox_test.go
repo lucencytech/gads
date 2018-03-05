@@ -30,6 +30,98 @@ func getTestConfig() AuthConfig {
 	return authconf
 }
 
+// NOTE: When running this on a non-production account you won't get real results
+// just stuff like "keyword XXXXXXXX" or "red herring XXXXXXXX"
+// https://groups.google.com/forum/#!msg/adwords-api/PVVYUY421yA/_yZMgEg5PiUJ
+func TestSandboxTargetingIdeaKeywords(t *testing.T) {
+	config := getTestConfig()
+	srv := NewTargetingIdeaService(&config.Auth)
+
+	LIMIT := 100
+
+	selector := TargetingIdeaSelector{
+		SearchParameters: []SearchParameter{
+			RelatedToQuerySearchParameter{
+				Queries: []string{"flowers"},
+			},
+			NetworkSearchParameter{
+				NetworkSetting: NetworkSetting{
+					TargetGoogleSearch:         true,
+					TargetSearchNetwork:        true,
+					TargetContentNetwork:       false,
+					TargetPartnerSearchNetwork: false,
+				},
+			},
+		},
+		IdeaType:                "KEYWORD",
+		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
+		RequestType:             "IDEAS",
+		Paging:                  Paging{0, int64(LIMIT)},
+	}
+	ideas, count, err := srv.Get(selector)
+	if err != nil {
+		t.Fatalf("didn't expect an error: %v", err)
+	}
+
+	if len(ideas) != LIMIT {
+		t.Fatalf("expected %d ideas to be returned", LIMIT)
+	}
+
+	if count < int64(LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", LIMIT, count)
+	}
+
+	fmt.Println("sample of keywords returned:")
+	for _, idea := range ideas[0:5] {
+		fmt.Println(idea.TargetingIdea[0].Value)
+	}
+}
+
+func TestSandboxTargetingIdeaURLs(t *testing.T) {
+	config := getTestConfig()
+	srv := NewTargetingIdeaService(&config.Auth)
+
+	LIMIT := 100
+
+	selector := TargetingIdeaSelector{
+		SearchParameters: []SearchParameter{
+			RelatedToUrlSearchParameter{
+				Urls:           []string{"https://getsidecar.com/"},
+				IncludeSubUrls: false,
+			},
+			NetworkSearchParameter{
+				NetworkSetting: NetworkSetting{
+					TargetGoogleSearch:         true,
+					TargetSearchNetwork:        true,
+					TargetContentNetwork:       false,
+					TargetPartnerSearchNetwork: false,
+				},
+			},
+		},
+		IdeaType:                "KEYWORD",
+		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
+		RequestType:             "IDEAS",
+		Paging:                  Paging{0, int64(LIMIT)},
+	}
+	ideas, count, err := srv.Get(selector)
+	if err != nil {
+		t.Fatalf("didn't expect an error: %v", err)
+	}
+
+	if len(ideas) != LIMIT {
+		t.Fatalf("expected %d ideas to be returned", LIMIT)
+	}
+
+	if count < int64(LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", LIMIT, count)
+	}
+
+	fmt.Println("sample of keywords returned:")
+	for _, idea := range ideas[0:5] {
+		fmt.Println(idea.TargetingIdea[0].Value)
+	}
+}
+
 func TestSandboxTrafficEstimator(t *testing.T) {
 	config := getTestConfig()
 	estimator := NewTrafficEstimatorService(&config.Auth)
