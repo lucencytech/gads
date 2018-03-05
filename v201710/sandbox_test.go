@@ -30,6 +30,89 @@ func getTestConfig() AuthConfig {
 	return authconf
 }
 
+func TestSandboxTrafficEstimator(t *testing.T) {
+	config := getTestConfig()
+	estimator := NewTrafficEstimatorService(&config.Auth)
+
+	isEstimateEmpty := func(estimate KeywordEstimate) bool {
+		isEmpty := func(sEstimate StatsEstimate) bool {
+			if sEstimate.AverageCpc == 0 {
+				return true
+			}
+
+			if sEstimate.AveragePosition == 0.0 {
+				return true
+			}
+
+			if sEstimate.ClickThroughRate == 0.0 {
+				return true
+			}
+
+			if sEstimate.ClicksPerDay == 0.0 {
+				return true
+			}
+
+			if sEstimate.ImpressionsPerDay == 0.0 {
+				return true
+			}
+
+			if sEstimate.TotalCost == 0 {
+				return true
+			}
+
+			return false
+		}
+
+		empty := isEmpty(estimate.Min)
+		if empty {
+			return empty
+		}
+
+		empty = isEmpty(estimate.Max)
+		return empty
+	}
+
+	resp, err := estimator.Get(TrafficEstimatorSelector{
+		CampaignEstimateRequests: []CampaignEstimateRequest{
+			CampaignEstimateRequest{
+				AdGroupEstimateRequests: []AdGroupEstimateRequest{
+					AdGroupEstimateRequest{
+						KeywordEstimateRequests: []KeywordEstimateRequest{
+							KeywordEstimateRequest{
+								KeywordCriterion{
+									Text:      "peony artificial flowers",
+									MatchType: "BROAD",
+								},
+							},
+							KeywordEstimateRequest{
+								KeywordCriterion{
+									Text:      "artificial gerbera flowers",
+									MatchType: "BROAD",
+								},
+							},
+						},
+						MaxCpc: 1000000,
+					},
+				},
+			},
+		}})
+
+	if err != nil {
+		t.Fatal("didn't expect an error")
+	}
+
+	if len(resp[0].AdGroupEstimates[0].KeywordEstimates) != 2 {
+		t.Fatal("expected estimations for each keyword")
+	}
+
+	for _, k := range resp[0].AdGroupEstimates[0].KeywordEstimates {
+		empty := isEstimateEmpty(k)
+		if empty {
+			t.Fatalf("keyword estimate has null value(s): %+v\n", k)
+		}
+	}
+}
+
 func TestSandboxCreateSharedSet(t *testing.T) {
 	config := getTestConfig()
 
