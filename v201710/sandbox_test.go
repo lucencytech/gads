@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+const (
+	TARGETING_IDEA_LIMIT = 100
+)
+
 func getTestConfig() AuthConfig {
 
 	creds := Credentials{
@@ -28,6 +32,177 @@ func getTestConfig() AuthConfig {
 
 	authconf, _ := NewCredentialsFromParams(creds)
 	return authconf
+}
+
+// NOTE: When running this on a non-production account you won't get real results
+// just stuff like "keyword XXXXXXXX" or "red herring XXXXXXXX"
+// https://groups.google.com/forum/#!msg/adwords-api/PVVYUY421yA/_yZMgEg5PiUJ
+func TestSandboxTargetingIdeaKeywords(t *testing.T) {
+	config := getTestConfig()
+	srv := NewTargetingIdeaService(&config.Auth)
+
+	selector := TargetingIdeaSelector{
+		SearchParameters: []SearchParameter{
+			RelatedToQuerySearchParameter{
+				Queries: []string{"flowers"},
+			},
+			NetworkSearchParameter{
+				NetworkSetting: NetworkSetting{
+					TargetGoogleSearch:         true,
+					TargetSearchNetwork:        true,
+					TargetContentNetwork:       false,
+					TargetPartnerSearchNetwork: false,
+				},
+			},
+		},
+		IdeaType:                "KEYWORD",
+		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
+		RequestType:             "IDEAS",
+		Paging:                  Paging{0, int64(TARGETING_IDEA_LIMIT)},
+	}
+	ideas, count, err := srv.Get(selector)
+	if err != nil {
+		t.Fatalf("didn't expect an error: %v", err)
+	}
+
+	if len(ideas) != TARGETING_IDEA_LIMIT {
+		t.Fatalf("expected %d ideas to be returned", TARGETING_IDEA_LIMIT)
+	}
+
+	if count < int64(TARGETING_IDEA_LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", TARGETING_IDEA_LIMIT, count)
+	}
+
+	fmt.Println("sample of keywords returned:")
+	for _, idea := range ideas[0:5] {
+		fmt.Println(idea.TargetingIdea[0].Value)
+	}
+}
+
+func TestSandboxTargetingIdeaURLs(t *testing.T) {
+	config := getTestConfig()
+	srv := NewTargetingIdeaService(&config.Auth)
+
+	selector := TargetingIdeaSelector{
+		SearchParameters: []SearchParameter{
+			RelatedToUrlSearchParameter{
+				Urls:           []string{"https://getsidecar.com/"},
+				IncludeSubUrls: false,
+			},
+			NetworkSearchParameter{
+				NetworkSetting: NetworkSetting{
+					TargetGoogleSearch:         true,
+					TargetSearchNetwork:        true,
+					TargetContentNetwork:       false,
+					TargetPartnerSearchNetwork: false,
+				},
+			},
+		},
+		IdeaType:                "KEYWORD",
+		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
+		RequestType:             "IDEAS",
+		Paging:                  Paging{0, int64(TARGETING_IDEA_LIMIT)},
+	}
+	ideas, count, err := srv.Get(selector)
+	if err != nil {
+		t.Fatalf("didn't expect an error: %v", err)
+	}
+
+	if len(ideas) != TARGETING_IDEA_LIMIT {
+		t.Fatalf("expected %d ideas to be returned", TARGETING_IDEA_LIMIT)
+	}
+
+	if count < int64(TARGETING_IDEA_LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", TARGETING_IDEA_LIMIT, count)
+	}
+
+	fmt.Println("sample of keywords returned:")
+	for _, idea := range ideas[0:5] {
+		fmt.Println(idea.TargetingIdea[0].Value)
+	}
+}
+
+func TestSandboxTrafficEstimator(t *testing.T) {
+	config := getTestConfig()
+	estimator := NewTrafficEstimatorService(&config.Auth)
+
+	isEstimateEmpty := func(estimate KeywordEstimate) bool {
+		isEmpty := func(sEstimate StatsEstimate) bool {
+			if sEstimate.AverageCpc == 0 {
+				return true
+			}
+
+			if sEstimate.AveragePosition == 0.0 {
+				return true
+			}
+
+			if sEstimate.ClickThroughRate == 0.0 {
+				return true
+			}
+
+			if sEstimate.ClicksPerDay == 0.0 {
+				return true
+			}
+
+			if sEstimate.ImpressionsPerDay == 0.0 {
+				return true
+			}
+
+			if sEstimate.TotalCost == 0 {
+				return true
+			}
+
+			return false
+		}
+
+		empty := isEmpty(estimate.Min)
+		if empty {
+			return empty
+		}
+
+		empty = isEmpty(estimate.Max)
+		return empty
+	}
+
+	resp, err := estimator.Get(TrafficEstimatorSelector{
+		CampaignEstimateRequests: []CampaignEstimateRequest{
+			CampaignEstimateRequest{
+				AdGroupEstimateRequests: []AdGroupEstimateRequest{
+					AdGroupEstimateRequest{
+						KeywordEstimateRequests: []KeywordEstimateRequest{
+							KeywordEstimateRequest{
+								KeywordCriterion{
+									Text:      "peony artificial flowers",
+									MatchType: "BROAD",
+								},
+							},
+							KeywordEstimateRequest{
+								KeywordCriterion{
+									Text:      "artificial gerbera flowers",
+									MatchType: "BROAD",
+								},
+							},
+						},
+						MaxCpc: 1000000,
+					},
+				},
+			},
+		}})
+
+	if err != nil {
+		t.Fatal("didn't expect an error")
+	}
+
+	if len(resp[0].AdGroupEstimates[0].KeywordEstimates) != 2 {
+		t.Fatal("expected estimations for each keyword")
+	}
+
+	for _, k := range resp[0].AdGroupEstimates[0].KeywordEstimates {
+		empty := isEstimateEmpty(k)
+		if empty {
+			t.Fatalf("keyword estimate has null value(s): %+v\n", k)
+		}
+	}
 }
 
 func TestSandboxCreateSharedSet(t *testing.T) {
