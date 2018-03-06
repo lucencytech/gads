@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+const (
+	TARGETING_IDEA_LIMIT = 100
+)
+
 func getTestConfig() AuthConfig {
 
 	creds := Credentials{
@@ -37,8 +41,6 @@ func TestSandboxTargetingIdeaKeywords(t *testing.T) {
 	config := getTestConfig()
 	srv := NewTargetingIdeaService(&config.Auth)
 
-	LIMIT := 100
-
 	selector := TargetingIdeaSelector{
 		SearchParameters: []SearchParameter{
 			RelatedToQuerySearchParameter{
@@ -56,19 +58,19 @@ func TestSandboxTargetingIdeaKeywords(t *testing.T) {
 		IdeaType:                "KEYWORD",
 		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
 		RequestType:             "IDEAS",
-		Paging:                  Paging{0, int64(LIMIT)},
+		Paging:                  Paging{0, int64(TARGETING_IDEA_LIMIT)},
 	}
 	ideas, count, err := srv.Get(selector)
 	if err != nil {
 		t.Fatalf("didn't expect an error: %v", err)
 	}
 
-	if len(ideas) != LIMIT {
-		t.Fatalf("expected %d ideas to be returned", LIMIT)
+	if len(ideas) != TARGETING_IDEA_LIMIT {
+		t.Fatalf("expected %d ideas to be returned", TARGETING_IDEA_LIMIT)
 	}
 
-	if count < int64(LIMIT) {
-		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", LIMIT, count)
+	if count < int64(TARGETING_IDEA_LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", TARGETING_IDEA_LIMIT, count)
 	}
 
 	fmt.Println("sample of keywords returned:")
@@ -80,8 +82,6 @@ func TestSandboxTargetingIdeaKeywords(t *testing.T) {
 func TestSandboxTargetingIdeaURLs(t *testing.T) {
 	config := getTestConfig()
 	srv := NewTargetingIdeaService(&config.Auth)
-
-	LIMIT := 100
 
 	selector := TargetingIdeaSelector{
 		SearchParameters: []SearchParameter{
@@ -101,19 +101,19 @@ func TestSandboxTargetingIdeaURLs(t *testing.T) {
 		IdeaType:                "KEYWORD",
 		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
 		RequestType:             "IDEAS",
-		Paging:                  Paging{0, int64(LIMIT)},
+		Paging:                  Paging{0, int64(TARGETING_IDEA_LIMIT)},
 	}
 	ideas, count, err := srv.Get(selector)
 	if err != nil {
 		t.Fatalf("didn't expect an error: %v", err)
 	}
 
-	if len(ideas) != LIMIT {
-		t.Fatalf("expected %d ideas to be returned", LIMIT)
+	if len(ideas) != TARGETING_IDEA_LIMIT {
+		t.Fatalf("expected %d ideas to be returned", TARGETING_IDEA_LIMIT)
 	}
 
-	if count < int64(LIMIT) {
-		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", LIMIT, count)
+	if count < int64(TARGETING_IDEA_LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", TARGETING_IDEA_LIMIT, count)
 	}
 
 	fmt.Println("sample of keywords returned:")
