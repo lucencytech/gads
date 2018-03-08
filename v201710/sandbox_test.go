@@ -164,7 +164,7 @@ func TestSandboxTrafficEstimator(t *testing.T) {
 		return empty
 	}
 
-	resp, err := estimator.Get(TrafficEstimatorSelector{
+	selector := TrafficEstimatorSelector{
 		CampaignEstimateRequests: []CampaignEstimateRequest{
 			CampaignEstimateRequest{
 				AdGroupEstimateRequests: []AdGroupEstimateRequest{
@@ -186,11 +186,14 @@ func TestSandboxTrafficEstimator(t *testing.T) {
 						MaxCpc: 1000000,
 					},
 				},
+				DailyBudget: 100000,
 			},
-		}})
+		}}
+
+	resp, err := estimator.Get(selector)
 
 	if err != nil {
-		t.Fatal("didn't expect an error")
+		t.Fatalf("didn't expect an error: %v", err)
 	}
 
 	if len(resp[0].AdGroupEstimates[0].KeywordEstimates) != 2 {
