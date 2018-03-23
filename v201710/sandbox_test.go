@@ -1,7 +1,9 @@
 package v201710
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -932,4 +934,30 @@ func TestRateError(t *testing.T) {
 
 	wg.Wait()
 
+}
+
+type StringClient string
+
+func (s StringClient) Do(req *http.Request) (*http.Response, error) {
+	return &http.Response{
+		Body:       BufferCloser{bytes.NewBufferString(string(s))},
+		StatusCode: http.StatusInternalServerError,
+	}, nil
+}
+
+func TestSandboxEmptyErrorMessage(t *testing.T) {
+	client := StringClient(`<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Unmarshalling Error: cvc-complex-type.2.4.a: Invalid content was found starting with element 'adServingOptimizationStatus'. One of '{"https://adwords.google.com/api/adwords/cm/v201710":status, "https://adwords.google.com/api/adwords/cm/v201710":settings, "https://adwords.google.com/api/adwords/cm/v201710":labels, "https://adwords.google.com/api/adwords/cm/v201710":forwardCompatibilityMap, "https://adwords.google.com/api/adwords/cm/v201710":biddingStrategyConfiguration, "https://adwords.google.com/api/adwords/cm/v201710":contentBidCriterionTypeGroup, "https://adwords.google.com/api/adwords/cm/v201710":baseCampaignId, "https://adwords.google.com/api/adwords/cm/v201710":baseAdGroupId, "https://adwords.google.com/api/adwords/cm/v201710":trackingUrlTemplate, "https://adwords.google.com/api/adwords/cm/v201710":urlCustomParameters, "https://adwords.google.com/api/adwords/cm/v201710":adGroupType, "https://adwords.google.com/api/adwords/cm/v201710":adGroupAdRotationMode}' is expected. </faultstring></soap:Fault></soap:Body></soap:Envelope>`)
+	auth := &Auth{
+		Client: client,
+	}
+
+	_, _, err := NewCampaignService(auth).Get(Selector{})
+
+	if err == nil {
+		t.Fatal("Test is not giving an error")
+	}
+
+	if err != nil && err.Error() == "" {
+		t.Fatal("Test giving a blank error message")
+	}
 }
