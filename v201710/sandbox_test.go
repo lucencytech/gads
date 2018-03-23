@@ -941,7 +941,7 @@ type StringClient string
 func (s StringClient) Do(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		Body:       BufferCloser{bytes.NewBufferString(string(s))},
-		StatusCode: 500,
+		StatusCode: http.StatusInternalServerError,
 	}, nil
 }
 
