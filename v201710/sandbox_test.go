@@ -933,3 +933,40 @@ func TestRateError(t *testing.T) {
 	wg.Wait()
 
 }
+
+func Testrequest(t *testing.T) {
+	config := getTestConfig()
+	campaigns, _, err := NewCampaignService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name", "CampaignId"},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	campaignId := campaigns[0].Id
+	adGroups, err := NewAdGroupService(&config.Auth).Mutate(
+		AdGroupOperations{
+			"ADD": {
+				AdGroup{
+					Name:       "test ad group " + rand_str(10),
+					Status:     "PAUSED",
+					CampaignId: campaignId,
+				},
+			},
+		},
+	)
+
+	if err != nil && err.Error() == "" {
+		t.Fatal(err.Error())
+	}
+
+	defer func() {
+		adGroups[0].Status = "REMOVED"
+		_, err = NewAdGroupService(&config.Auth).Mutate(AdGroupOperations{"SET": adGroups})
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
+}
