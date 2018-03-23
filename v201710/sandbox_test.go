@@ -957,10 +957,6 @@ func Testrequest(t *testing.T) {
 		},
 	)
 
-	if err != nil && err.Error() == "" {
-		t.Fatal(err.Error())
-	}
-
 	defer func() {
 		adGroups[0].Status = "REMOVED"
 		_, err = NewAdGroupService(&config.Auth).Mutate(AdGroupOperations{"SET": adGroups})
@@ -969,4 +965,7 @@ func Testrequest(t *testing.T) {
 		}
 	}()
 
+	if err != nil && err.Error() == "" {
+		t.Fatal(err.Error())
+	}
 }
