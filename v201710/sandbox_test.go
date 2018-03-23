@@ -953,7 +953,11 @@ func TestSandboxEmptyErrorMessage(t *testing.T) {
 
 	_, _, err := NewCampaignService(auth).Get(Selector{})
 
+	if err == nil {
+		t.Fatal("Test is not giving an error")
+	}
+
 	if err != nil && err.Error() == "" {
-		t.Fatal()
+		t.Fatal("Test giving a blank error message")
 	}
 }
