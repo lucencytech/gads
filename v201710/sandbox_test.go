@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 )
 
 const (
@@ -934,6 +935,47 @@ func TestRateError(t *testing.T) {
 
 	wg.Wait()
 
+}
+
+func TestAddSearchAdGroup(t *testing.T) {
+	config := getTestConfig()
+
+	campaigns, _, err := NewCampaignService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name"},
+	})
+	if err != nil {
+		t.Fatalf("didn't expect the get campaigns call to fail: %v", err)
+	}
+
+	newAdgroupName := fmt.Sprintf("test_adgroup_%d", time.Now().UnixNano())
+
+	ops := make(map[string][]AdGroup)
+	ops["ADD"] = []AdGroup{
+		AdGroup{
+			Name:         newAdgroupName,
+			CampaignId:   campaigns[0].Id,
+			Status:       "PAUSED",
+			Labels:       make([]Label, 0),
+			Type:         "SHOPPING_PRODUCT_ADS",
+			RotationMode: "OPTIMIZE",
+		},
+	}
+	adgroups, err := NewAdGroupService(&config.Auth).Mutate(ops)
+	if err != nil {
+		t.Fatalf("didn't expect an error creating adgroup: %v", err)
+	}
+
+	remove_ops := make(map[string][]AdGroup)
+	remove_ops["SET"] = []AdGroup{
+		AdGroup{
+			Id:     adgroups[0].Id,
+			Status: "REMOVED",
+		},
+	}
+	_, err = NewAdGroupService(&config.Auth).Mutate(remove_ops)
+	if err != nil {
+		t.Fatalf("didn't expect the adgroup remove to fail: %v", err)
+	}
 }
 
 type StringClient string
