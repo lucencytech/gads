@@ -37,6 +37,200 @@ func getTestConfig() AuthConfig {
 	return authconf
 }
 
+func createUniqueId() int64 {
+	return time.Now().UnixNano() * -1
+}
+
+func createBatchTextAdOperation(adgroupId int64) (operations AdGroupAdOperations) {
+	fmt.Printf("using adgroup id: %d\n", adgroupId)
+	return AdGroupAdOperations{
+		"ADD": {
+			BatchExpandedTextAd{
+				AdGroupId:     adgroupId,
+				FinalUrls:     []string{"https://getsidecar.com"},
+				HeadlinePart1: "Buy Now | Sidecar",
+				HeadlinePart2: "Buy something now",
+				Description:   "Great deal",
+				Path1:         "Data",
+				Path2:         "Apps",
+				Status:        "PAUSED",
+				Type:          "ExpandedTextAd",
+			},
+		},
+	}
+}
+
+func createBatchOperations(num int) (operations []interface{}) {
+	campaignId := createUniqueId()
+	campaignOp := CampaignOperations{
+		"ADD": {
+			Campaign{
+				Id:                     campaignId,
+				Name:                   fmt.Sprintf("dave's batch test campaign%d", num),
+				Status:                 "PAUSED",
+				StartDate:              time.Now().Format("20060102"),
+				BudgetId:               1329921755,
+				AdvertisingChannelType: "SEARCH",
+				BiddingStrategyConfiguration: &BiddingStrategyConfiguration{
+					StrategyType: "MANUAL_CPC",
+				},
+			},
+		},
+	}
+
+	operations = append(operations, campaignOp)
+
+	adgroupId := createUniqueId()
+
+	adgroupOp := AdGroupOperations{
+		"ADD": {
+			AdGroup{
+				Id:         adgroupId,
+				Name:       fmt.Sprintf("dave's batch test adgroup%d", num),
+				Status:     "ENABLED",
+				CampaignId: campaignId,
+			},
+		},
+	}
+
+	operations = append(operations, adgroupOp)
+
+	operations = append(operations, createBatchTextAdOperation(adgroupId))
+
+	keywordOps := AdGroupCriterionOperations{
+		"ADD": {
+			BiddableAdGroupCriterion{
+				AdGroupId:  adgroupId,
+				Criterion:  KeywordCriterion{Text: fmt.Sprintf("+positive +keyword%d", num), MatchType: "BROAD"},
+				UserStatus: "ENABLED",
+				BiddingStrategyConfiguration: &BiddingStrategyConfiguration{
+					Bids: []Bid{
+						Bid{
+							Type:   "CpcBid",
+							Amount: 1000000,
+						},
+					},
+				},
+			},
+			NegativeAdGroupCriterion{
+				AdGroupId: adgroupId,
+				Criterion: KeywordCriterion{Text: fmt.Sprintf("+negative +keyword%d", num), MatchType: "BROAD"},
+			},
+		},
+	}
+
+	operations = append(operations, keywordOps)
+
+	return operations
+}
+
+func TestSandboxBatchJobTesting(t *testing.T) {
+	config := getTestConfig()
+	srv := NewBatchJobService(&config.Auth)
+
+	// Create batch job
+	resp, err := srv.Mutate(
+		BatchJobOperations{
+			BatchJobOperations: []BatchJobOperation{
+				BatchJobOperation{
+					Operator: "ADD",
+					Operand:  BatchJob{},
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		t.Errorf("didn't expect an error: %v", err)
+	}
+	job := resp[0]
+
+	// Create operations
+	var operations []interface{}
+	TOTAL_SIZE := 1
+	for i := 0; i < TOTAL_SIZE; i++ {
+		operations = append(operations, createBatchOperations(i)...)
+	}
+
+	// Upload the operations
+	fmt.Printf("uploading %d operations...", len(operations))
+	helperSrv := NewBatchJobHelper(&config.Auth)
+	err = helperSrv.UploadBatchJobOperations(operations, *job.UploadUrl)
+	if err != nil {
+		t.Errorf("didn't expect an error: %v", err)
+	}
+	fmt.Println("done!")
+	start := time.Now()
+
+	SLEEP := 15
+
+	for {
+		resp, err := srv.Get(
+			Selector{
+				Fields: []string{
+					"Id",
+					"Status",
+					"DownloadUrl",
+					"ProcessingErrors",
+					"ProgressStats",
+				},
+				Predicates: []Predicate{
+					{"Id", "EQUALS", []string{strconv.FormatInt(job.Id, 10)}},
+				},
+			},
+		)
+
+		if err != nil {
+			t.Errorf("didn't expect there to be an error: %v", err)
+		}
+
+		if resp.BatchJobs[0].Status != "DONE" {
+			fmt.Printf("got a status of %s, sleeping and retrying\n", resp.BatchJobs[0].Status)
+			time.Sleep(time.Duration(SLEEP) * time.Second)
+			continue
+		}
+
+		if resp.TotalNumEntries != 1 {
+			t.Errorf("expected there to be one entry, but got %d", resp.TotalNumEntries)
+		}
+
+		fmt.Println("operations have completed processing")
+		end := int(time.Now().Sub(start).Seconds())
+		fmt.Printf("took %d seconds\n", end)
+
+		results, err := helperSrv.DownloadBatchJob(*resp.BatchJobs[0].DownloadUrl)
+		if err != nil {
+			t.Errorf("didn't expect an error: %v", err)
+		}
+
+		for _, result := range results {
+			if len(result.ErrorList) > 0 {
+				for _, e := range result.ErrorList {
+					t.Errorf("error returned for entity %s: %s", e.Errors.Trigger, e.Errors.ErrorString)
+				}
+			}
+		}
+
+		// delete the new campaign
+		firstResult := results[0].Result
+		newCampaign := firstResult.(Campaign)
+		newCampaign.Status = "REMOVED"
+		newCampaign.AdServingOptimizationStatus = ""
+
+		campaignSrv := NewCampaignService(&config.Auth)
+		_, err = campaignSrv.Mutate(CampaignOperations{
+			"SET": {
+				newCampaign,
+			},
+		})
+		if err != nil {
+			t.Errorf("didn't expect an error when deleting the new campaign: %v", err)
+		}
+
+		return
+	}
+}
+
 // NOTE: When running this on a non-production account you won't get real results
 // just stuff like "keyword XXXXXXXX" or "red herring XXXXXXXX"
 // https://groups.google.com/forum/#!msg/adwords-api/PVVYUY421yA/_yZMgEg5PiUJ
@@ -600,12 +794,7 @@ func TestSandboxCriteria(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(campaigns)
-	var campaign int64
-	for i := range campaigns {
-		if campaigns[i].Name == "sidecar-test-campaign" {
-			campaign = campaigns[i].Id
-		}
-	}
+	campaign := campaigns[0].Id
 
 	adgroups, _, err := NewAdGroupService(&config.Auth).Get(Selector{
 		Fields: []string{"Id", "Name"},
@@ -651,8 +840,6 @@ func TestSandboxCriteria(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Println(crits)
-
 	//rootCriterion
 
 	root, rest, toremove := func() (ProductPartition, []BiddableAdGroupCriterion, *BiddableAdGroupCriterion) {
@@ -661,14 +848,8 @@ func TestSandboxCriteria(t *testing.T) {
 		var toremove *BiddableAdGroupCriterion
 
 		for i := 0; i < len(crits); i++ {
-			crit, ok := crits[i].(BiddableAdGroupCriterion)
-			if !ok {
-				t.Fatal(crits[i])
-			}
-			part, ok := crit.Criterion.(ProductPartition)
-			if !ok {
-				t.Fatal(crits[i])
-			}
+			crit, _ := crits[i].(BiddableAdGroupCriterion)
+			part := crit.Criterion.(ProductPartition)
 
 			if part.ParentCriterionId == 0 {
 				root = part
@@ -687,7 +868,6 @@ func TestSandboxCriteria(t *testing.T) {
 	}()
 
 	fmt.Printf("ROOT:  %#v\n", root)
-	fmt.Printf("REMOVE:  %#v\n", toremove)
 
 	/*
 		removes := AdGroupCriterions{}
@@ -1007,7 +1187,7 @@ func (s StringClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestSandboxEmptyErrorMessage(t *testing.T) {
-	client := StringClient(`<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Unmarshalling Error: cvc-complex-type.2.4.a: Invalid content was found starting with element 'adServingOptimizationStatus'. One of '{"https://adwords.google.com/api/adwords/cm/v201806":status, "https://adwords.google.com/api/adwords/cm/v201806":settings, "https://adwords.google.com/api/adwords/cm/v201806":labels, "https://adwords.google.com/api/adwords/cm/v201806":forwardCompatibilityMap, "https://adwords.google.com/api/adwords/cm/v201806":biddingStrategyConfiguration, "https://adwords.google.com/api/adwords/cm/v201806":contentBidCriterionTypeGroup, "https://adwords.google.com/api/adwords/cm/v201806":baseCampaignId, "https://adwords.google.com/api/adwords/cm/v201806":baseAdGroupId, "https://adwords.google.com/api/adwords/cm/v201806":trackingUrlTemplate, "https://adwords.google.com/api/adwords/cm/v201806":urlCustomParameters, "https://adwords.google.com/api/adwords/cm/v201806":adGroupType, "https://adwords.google.com/api/adwords/cm/v201806":adGroupAdRotationMode}' is expected. </faultstring></soap:Fault></soap:Body></soap:Envelope>`)
+	client := StringClient(`<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Unmarshalling Error: cvc-complex-type.2.4.a: Invalid content was found starting with element 'adServingOptimizationStatus'. One of '{"https://adwords.google.com/api/adwords/cm/v201710":status, "https://adwords.google.com/api/adwords/cm/v201710":settings, "https://adwords.google.com/api/adwords/cm/v201710":labels, "https://adwords.google.com/api/adwords/cm/v201710":forwardCompatibilityMap, "https://adwords.google.com/api/adwords/cm/v201710":biddingStrategyConfiguration, "https://adwords.google.com/api/adwords/cm/v201710":contentBidCriterionTypeGroup, "https://adwords.google.com/api/adwords/cm/v201710":baseCampaignId, "https://adwords.google.com/api/adwords/cm/v201710":baseAdGroupId, "https://adwords.google.com/api/adwords/cm/v201710":trackingUrlTemplate, "https://adwords.google.com/api/adwords/cm/v201710":urlCustomParameters, "https://adwords.google.com/api/adwords/cm/v201710":adGroupType, "https://adwords.google.com/api/adwords/cm/v201710":adGroupAdRotationMode}' is expected. </faultstring></soap:Fault></soap:Body></soap:Envelope>`)
 	auth := &Auth{
 		Client: client,
 	}
