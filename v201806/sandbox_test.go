@@ -282,6 +282,9 @@ func TestOPPBreakout(t *testing.T) {
 		}
 		return nil, fmt.Errorf("missing test adgroup\n")
 	}()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	crits, _, err := NewAdGroupCriterionService(&config.Auth).Get(Selector{
 		Fields: []string{"AdGroupId", "BidModifier", "CriterionUse", "ParentCriterionId", "CriteriaType", "CaseValue", "Id", "BiddingStrategyType", "CpcBid", "BiddingStrategyId"},
@@ -508,7 +511,7 @@ func TestBreakOut(t *testing.T) {
 		part := crit.Criterion.(ProductPartition)
 		fmt.Printf("%#v\n", part)
 
-		if part.Dimension.Value == "aaa" || part.Dimension.Value == "bbb" {
+		if part.Dimension.Value == "aaa" || part.Dimension.Value == "aaaa" {
 			root = crit
 		}
 	}
@@ -516,6 +519,7 @@ func TestBreakOut(t *testing.T) {
 	crit := root.Criterion.(ProductPartition)
 	crit.PartitionType = "SUBDIVISION"
 	root.Criterion = crit
+	root.BiddingStrategyConfiguration.StrategyType = "NONE"
 
 	bsc := &BiddingStrategyConfiguration{
 		StrategyType: "NONE",
@@ -683,6 +687,7 @@ func TestSandboxCriteria(t *testing.T) {
 	}()
 
 	fmt.Printf("ROOT:  %#v\n", root)
+	fmt.Printf("REMOVE:  %#v\n", toremove)
 
 	/*
 		removes := AdGroupCriterions{}
@@ -697,6 +702,7 @@ func TestSandboxCriteria(t *testing.T) {
 	*/
 
 	if toremove != nil {
+		toremove.BiddingStrategyConfiguration.StrategyType = "NONE"
 		aops := []AdGroupCriterionOperation{
 			{"REMOVE", *toremove},
 		}
