@@ -18,6 +18,7 @@ type CampaignCriterion struct {
 	IsNegative  bool      `xml:"isNegative,omitempty"`
 	Criterion   Criterion `xml:"criterion"`
 	BidModifier float64   `xml:"bidModifier,omitempty"`
+	Status      string    `xml:"campaignCriterionStatus,omnitempty"`
 	Errors      []error   `xml:"-"`
 	Type        string    `xml:"-"`
 	Id          int64     `xml:"-"`
@@ -100,6 +101,10 @@ func (ccs *CampaignCriterions) UnmarshalXML(dec *xml.Decoder, start xml.StartEle
 				}
 			case "isNegative":
 				if err := dec.DecodeElement(&cc.IsNegative, &start); err != nil {
+					return err
+				}
+			case "campaignCriterionStatus":
+				if err := dec.DecodeElement(&cc.Status, &start); err != nil {
 					return err
 				}
 			}
