@@ -48,6 +48,10 @@ type CampaignSetting struct {
 
 	// TrackingSetting
 	TrackingUrl *string `xml:"trackingUrl,omitempty"`
+
+	MerchantId       int64  `xml:"merchantId,omitempty"`
+	SalesCountry     string `xml:"salesCountry,omitempty"`
+	CampaignPriority int    `xml:"campaignPriority,omitempty"`
 }
 
 func NewDynamicSearchAdsSetting(domainName, languageCode string) CampaignSetting {
@@ -60,7 +64,7 @@ func NewDynamicSearchAdsSetting(domainName, languageCode string) CampaignSetting
 
 func NewGeoTargetTypeSetting(positiveGeoTargetType, negativeGeoTargetType string) CampaignSetting {
 	return CampaignSetting{
-		Type: "GeoTargetTypeSetting",
+		Type:                  "GeoTargetTypeSetting",
 		PositiveGeoTargetType: &positiveGeoTargetType,
 		NegativeGeoTargetType: &negativeGeoTargetType,
 	}

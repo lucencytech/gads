@@ -1390,3 +1390,148 @@ func TestSandboxEmptyErrorMessage(t *testing.T) {
 		t.Fatal("Test giving a blank error message")
 	}
 }
+
+func getTestCampaignBudgetAndMI(xs []Campaign) (int64, int64, bool) {
+	for _, camp := range xs {
+		if camp.Name == "sidecar-test-campaign" {
+			for _, s := range camp.Settings {
+				if s.Type == "ShoppingSetting" {
+					return camp.BudgetId, s.MerchantId, true
+				}
+			}
+		}
+	}
+
+	return 0, 0, false
+}
+
+func getExistingCampaign(campaigns []Campaign) (Campaign, bool) {
+	for i := range campaigns {
+		if campaigns[i].Name == "sidecar-test-clone-campaign" {
+			return campaigns[i], true
+		}
+	}
+
+	return Campaign{}, false
+}
+
+func getExistingBudget(budgets []Budget) (Budget, bool) {
+	for _, budget := range budgets {
+		if budget.Name == "sidecar-test-clone-budget" {
+			return budget, true
+		}
+	}
+
+	return Budget{}, false
+}
+
+func TestCampaignCreate(t *testing.T) {
+	config := getTestConfig()
+	svc := NewCampaignService(&config.Auth)
+	campaigns, _, err := svc.Get(Selector{
+		Fields: []string{
+			"Id",
+			"Name",
+			"Status",
+			"AdvertisingChannelType",
+			"AdvertisingChannelSubType",
+			"StartDate",
+			"EndDate",
+			"BudgetId",
+			"Labels",
+			"Settings",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	budgetsvc := NewBudgetService(&config.Auth)
+
+	budgets, _, err := budgetsvc.Get(Selector{
+		Fields: []string{
+			"Amount",
+			"BudgetId",
+			"BudgetName",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	budget, ok := getExistingBudget(budgets)
+	if !ok {
+		budgets, err = budgetsvc.Mutate(BudgetOperations{
+			"ADD": {
+				Budget{
+					Name:   "sidecar-test-clone-budget",
+					Amount: 1000000,
+					Shared: true,
+				},
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		budget, ok = getExistingBudget(budgets)
+		if !ok {
+			t.Fatalf("we should have just created this budget..")
+		}
+	}
+
+	budgetid := budget.Id
+
+	if existing, ok := getExistingCampaign(campaigns); ok {
+		existing.Status = "REMOVED"
+		if _, err := svc.Mutate(CampaignOperations{
+			"SET": {
+				existing,
+			},
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, mi, ok := getTestCampaignBudgetAndMI(campaigns)
+	if !ok {
+		t.Fatalf("can't find test budget + mi")
+	}
+
+	createdcampaigns, err := svc.Mutate(CampaignOperations{
+		"ADD": {
+			Campaign{
+				Name:                   "sidecar-test-clone-campaign",
+				AdvertisingChannelType: "SHOPPING",
+				BudgetId:               budgetid,
+				BiddingStrategyConfiguration: &BiddingStrategyConfiguration{
+					StrategyType: "MANUAL_CPC",
+				},
+				Settings: []CampaignSetting{
+					CampaignSetting{
+						Type:             "ShoppingSetting",
+						MerchantId:       mi,
+						SalesCountry:     "US",
+						CampaignPriority: 0,
+					},
+				},
+			},
+		},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newcamp := createdcampaigns[0]
+
+	NewAdGroupService(&config.Auth).Mutate(AdGroupOperations{
+		"ADD": {
+			AdGroup{
+				CampaignId: newcamp.Id,
+				Name:       "sidecar-test-clone-adgroup",
+			},
+		},
+	})
+
+}
