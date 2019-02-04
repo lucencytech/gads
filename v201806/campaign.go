@@ -51,7 +51,7 @@ type CampaignSetting struct {
 
 	MerchantId       int64  `xml:"merchantId,omitempty"`
 	SalesCountry     string `xml:"salesCountry,omitempty"`
-	CampaignPriority int    `xml:"campaignPriority,omitempty"`
+	CampaignPriority *int   `xml:"campaignPriority,omitempty"`
 }
 
 func NewDynamicSearchAdsSetting(domainName, languageCode string) CampaignSetting {

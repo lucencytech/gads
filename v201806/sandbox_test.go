@@ -1498,6 +1498,8 @@ func TestCampaignCreate(t *testing.T) {
 		t.Fatalf("can't find test budget + mi")
 	}
 
+	var priority int
+
 	createdcampaigns, err := svc.Mutate(CampaignOperations{
 		"ADD": {
 			Campaign{
@@ -1512,7 +1514,7 @@ func TestCampaignCreate(t *testing.T) {
 						Type:             "ShoppingSetting",
 						MerchantId:       mi,
 						SalesCountry:     "US",
-						CampaignPriority: 0,
+						CampaignPriority: &priority,
 					},
 				},
 			},
