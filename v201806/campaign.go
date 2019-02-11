@@ -125,13 +125,13 @@ type CustomParameters struct {
 
 type Campaign struct {
 	Id                             int64                           `xml:"id,omitempty"`
-	Name                           string                          `xml:"name"`
+	Name                           string                          `xml:"name,omitempty"`
 	BudgetAmount                   int64                           `xml:"-"`
 	Status                         string                          `xml:"status,omitempty"`        // Status: "ENABLED", "PAUSED", "REMOVED"
 	ServingStatus                  *string                         `xml:"servingStatus,omitempty"` // ServingStatus: "SERVING", "NONE", "ENDED", "PENDING", "SUSPENDED"
 	StartDate                      string                          `xml:"startDate,omitempty"`
 	EndDate                        string                          `xml:"endDate,omitempty"`
-	BudgetId                       int64                           `xml:"budget>budgetId"`
+	BudgetId                       int64                           `xml:"budget>budgetId,omitempty"`
 	BudgetDeliveryMethod           string                          `xml:"-"`
 	ConversionOptimizerEligibility *conversionOptimizerEligibility `xml:"conversionOptimizerEligibility,omitempty"`
 	AdServingOptimizationStatus    string                          `xml:"adServingOptimizationStatus,omitempty"`
