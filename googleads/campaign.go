@@ -1,4 +1,4 @@
-package v201806
+package v201809
 
 import "encoding/xml"
 
@@ -85,10 +85,10 @@ func NewTrackingSetting(trackingUrl string) CampaignSetting {
 }
 
 type NetworkSetting struct {
-	TargetGoogleSearch         bool `xml:"https://adwords.google.com/api/adwords/cm/v201806 targetGoogleSearch"`
-	TargetSearchNetwork        bool `xml:"https://adwords.google.com/api/adwords/cm/v201806 targetSearchNetwork"`
-	TargetContentNetwork       bool `xml:"https://adwords.google.com/api/adwords/cm/v201806 targetContentNetwork"`
-	TargetPartnerSearchNetwork bool `xml:"https://adwords.google.com/api/adwords/cm/v201806 targetPartnerSearchNetwork"`
+	TargetGoogleSearch         bool `xml:"https://adwords.google.com/api/adwords/cm/v201809 targetGoogleSearch"`
+	TargetSearchNetwork        bool `xml:"https://adwords.google.com/api/adwords/cm/v201809 targetSearchNetwork"`
+	TargetContentNetwork       bool `xml:"https://adwords.google.com/api/adwords/cm/v201809 targetContentNetwork"`
+	TargetPartnerSearchNetwork bool `xml:"https://adwords.google.com/api/adwords/cm/v201809 targetPartnerSearchNetwork"`
 }
 
 type BiddingScheme struct {
