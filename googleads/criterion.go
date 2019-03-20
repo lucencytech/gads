@@ -59,7 +59,7 @@ type CarrierCriterion struct {
 
 type ContentLabelCriterion struct {
 	Id               int64  `xml:"id,omitempty"`
-	ContentLabelType string `xml:"contentLabelType"` // ContentLabelType: "ADULTISH", "AFE", "BELOW_THE_FOLD", "CONFLICT", "DP", "EMBEDDED_VIDEO", "GAMES", "JACKASS", "PROFANITY", "UGC_FORUMS", "UGC_IMAGES", "UGC_SOCIAL", "UGC_VIDEOS", "SIRENS", "TRAGEDY", "VIDEO", "UNKNOWN"
+	ContentLabelType string `xml:"contentLabelType"` // ContentLabelType: "ADULTISH", "BELOW_THE_FOLD", "DP", "EMBEDDED_VIDEO", "GAMES", "JUVENILE", "PROFANITY", "TRAGEDY", "VIDEO", "VIDEO_RATING_DV_G", "VIDEO_RATING_DV_PG", "VIDEO_RATING_DV_T", "VIDEO_RATING_DV_MA", "VIDEO_NOT_YET_RATED", "LIVE_STREAMING_VIDEO", "UNKNOWN"
 }
 
 type GenderCriterion struct {
