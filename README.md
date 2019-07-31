@@ -43,13 +43,15 @@ setup the JSON file to gather credentials.
 
 To run the sandbox tests:  
 
-1. `cp .env.dist .env` and fill in the credentials
-2. `set -a`
-3. `source .env`
+```sh
+aws s3 cp s3://sc-local-env/gads/.env .
+set -a
+source .env
+```
 
 Then to run the tests:
 
-1. `cd v201710`
+1. `cd googleads`
 2. `go test -run Sandbox`
 
 ## Versions
