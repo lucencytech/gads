@@ -5,7 +5,7 @@ Package gads provides a wrapper for the Google Adwords SOAP API.  Based off of
 was updated to support v201710 and additional functionality that was missing from
 the current versions.
 
-**Note:** This repository should be kept public  since we are held to the original license [here](https://github.com/Getsidecar/gads/blob/master/googleads/LICENSE).
+**Note:** This repository should be kept public since we are held to [the original license](https://github.com/Getsidecar/gads/blob/master/googleads/LICENSE).
 
 ## Installation
 
