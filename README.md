@@ -2,8 +2,10 @@
 
 Package gads provides a wrapper for the Google Adwords SOAP API.  Based off of
 [colinmutter/gads](https://github.com/colinmutter/gads), this version
-was updated to support v201710 and additional functionality that was missing from 
-the current versions.  
+was updated to support v201710 and additional functionality that was missing from
+the current versions.
+
+**Note:** This repository should be kept public since we are held to [the original license](https://github.com/Getsidecar/gads/blob/master/googleads/LICENSE).
 
 ## Installation
 
@@ -38,10 +40,10 @@ the service methods on the service object.
 
 ## Testing
 Sidecar has written integration tests in the `sandbox_test.go` file. All other
-tests were included in the original repo and won't run correctly unless you 
-setup the JSON file to gather credentials.  
+tests were included in the original repo and won't run correctly unless you
+setup the JSON file to gather credentials.
 
-To run the sandbox tests:  
+To run the sandbox tests:
 
 ```sh
 aws s3 cp s3://sc-local-env/gads/.env .
